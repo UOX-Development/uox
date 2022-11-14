@@ -48,27 +48,23 @@
 JS_BEGIN_EXTERN_C
 
 /* Generous sanity-bound on length (in elements) of array initialiser. */
-#define ARRAY_INIT_LIMIT        JS_BIT(24)
+#define ARRAY_INIT_LIMIT JS_BIT(24)
 
-extern JSBool
-js_IdIsIndex(jsval id, jsuint *indexp);
+extern JSBool js_IdIsIndex(jsval id, jsuint *indexp);
 
 extern JSClass js_ArrayClass;
 
-extern JSObject *
-js_InitArrayClass(JSContext *cx, JSObject *obj);
+extern JSObject *js_InitArrayClass(JSContext *cx, JSObject *obj);
 
-extern JSObject *
-js_NewArrayObject(JSContext *cx, jsuint length, jsval *vector);
+extern JSObject *js_NewArrayObject(JSContext *cx, jsuint length, jsval *vector);
 
-extern JSBool
-js_GetLengthProperty(JSContext *cx, JSObject *obj, jsuint *lengthp);
+extern JSBool js_GetLengthProperty(JSContext *cx, JSObject *obj,
+                                   jsuint *lengthp);
 
-extern JSBool
-js_SetLengthProperty(JSContext *cx, JSObject *obj, jsuint length);
+extern JSBool js_SetLengthProperty(JSContext *cx, JSObject *obj, jsuint length);
 
-extern JSBool
-js_HasLengthProperty(JSContext *cx, JSObject *obj, jsuint *lengthp);
+extern JSBool js_HasLengthProperty(JSContext *cx, JSObject *obj,
+                                   jsuint *lengthp);
 
 /*
  * Test whether an object is "array-like".  Currently this means whether obj
@@ -77,8 +73,8 @@ js_HasLengthProperty(JSContext *cx, JSObject *obj, jsuint *lengthp);
  * properties, and a 'length' property of uint32 value equal to one more than
  * the greatest index.
  */
-extern JSBool
-js_IsArrayLike(JSContext *cx, JSObject *obj, JSBool *answerp, jsuint *lengthp);
+extern JSBool js_IsArrayLike(JSContext *cx, JSObject *obj, JSBool *answerp,
+                             jsuint *lengthp);
 
 /*
  * JS-specific heap sort function.
@@ -86,9 +82,8 @@ js_IsArrayLike(JSContext *cx, JSObject *obj, JSBool *answerp, jsuint *lengthp);
 typedef JSBool (*JSComparator)(void *arg, const void *a, const void *b,
                                int *result);
 
-extern JSBool
-js_HeapSort(void *vec, size_t nel, void *pivot, size_t elsize,
-            JSComparator cmp, void *arg);
+extern JSBool js_HeapSort(void *vec, size_t nel, void *pivot, size_t elsize,
+                          JSComparator cmp, void *arg);
 
 JS_END_EXTERN_C
 

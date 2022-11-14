@@ -40,20 +40,20 @@
 /*
  * Double hashing implementation.
  */
+#include "jsdhash.h"
+#include "jsbit.h"
+#include "jsutil.h" /* for JS_ASSERT */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "jsbit.h"
-#include "jsdhash.h"
-#include "jsutil.h"     /* for JS_ASSERT */
 
 #ifdef JS_DHASHMETER
-# if defined MOZILLA_CLIENT && defined DEBUG_XXXbrendan
-#  include "nsTraceMalloc.h"
-# endif
-# define METER(x)       x
+#if defined MOZILLA_CLIENT && defined DEBUG_XXXbrendan
+#include "nsTraceMalloc.h"
+#endif
+#define METER(x) x
 #else
-# define METER(x)       /* nothing */
+#define METER(x) /* nothing */
 #endif
 
 /*
@@ -66,37 +66,32 @@
  */
 #ifdef DEBUG
 
-#define RECURSION_LEVEL(table_) (*(uint32*)(table_->entryStore + \
-                                            JS_DHASH_TABLE_SIZE(table_) * \
-                                            table_->entrySize))
+#define RECURSION_LEVEL(table_)                                                \
+    (*(uint32 *)(table_->entryStore +                                          \
+                 JS_DHASH_TABLE_SIZE(table_) * table_->entrySize))
 
-#define ENTRY_STORE_EXTRA                   sizeof(uint32)
-#define INCREMENT_RECURSION_LEVEL(table_)   (++RECURSION_LEVEL(table_))
-#define DECREMENT_RECURSION_LEVEL(table_)   (--RECURSION_LEVEL(table_))
+#define ENTRY_STORE_EXTRA sizeof(uint32)
+#define INCREMENT_RECURSION_LEVEL(table_) (++RECURSION_LEVEL(table_))
+#define DECREMENT_RECURSION_LEVEL(table_) (--RECURSION_LEVEL(table_))
 
 #else
 
 #define ENTRY_STORE_EXTRA 0
-#define INCREMENT_RECURSION_LEVEL(table_)   ((void)1)
-#define DECREMENT_RECURSION_LEVEL(table_)   ((void)0)
+#define INCREMENT_RECURSION_LEVEL(table_) ((void)1)
+#define DECREMENT_RECURSION_LEVEL(table_) ((void)0)
 
 #endif /* defined(DEBUG) */
 
 JS_PUBLIC_API(void *)
-JS_DHashAllocTable(JSDHashTable *table, uint32 nbytes)
-{
+JS_DHashAllocTable(JSDHashTable *table, uint32 nbytes) {
     return malloc(nbytes);
 }
 
 JS_PUBLIC_API(void)
-JS_DHashFreeTable(JSDHashTable *table, void *ptr)
-{
-    free(ptr);
-}
+JS_DHashFreeTable(JSDHashTable *table, void *ptr) { free(ptr); }
 
 JS_PUBLIC_API(JSDHashNumber)
-JS_DHashStringKey(JSDHashTable *table, const void *key)
-{
+JS_DHashStringKey(JSDHashTable *table, const void *key) {
     JSDHashNumber h;
     const unsigned char *s;
 
@@ -107,34 +102,28 @@ JS_DHashStringKey(JSDHashTable *table, const void *key)
 }
 
 JS_PUBLIC_API(const void *)
-JS_DHashGetKeyStub(JSDHashTable *table, JSDHashEntryHdr *entry)
-{
+JS_DHashGetKeyStub(JSDHashTable *table, JSDHashEntryHdr *entry) {
     JSDHashEntryStub *stub = (JSDHashEntryStub *)entry;
 
     return stub->key;
 }
 
 JS_PUBLIC_API(JSDHashNumber)
-JS_DHashVoidPtrKeyStub(JSDHashTable *table, const void *key)
-{
+JS_DHashVoidPtrKeyStub(JSDHashTable *table, const void *key) {
     return (JSDHashNumber)(unsigned long)key >> 2;
 }
 
 JS_PUBLIC_API(JSBool)
-JS_DHashMatchEntryStub(JSDHashTable *table,
-                       const JSDHashEntryHdr *entry,
-                       const void *key)
-{
+JS_DHashMatchEntryStub(JSDHashTable *table, const JSDHashEntryHdr *entry,
+                       const void *key) {
     const JSDHashEntryStub *stub = (const JSDHashEntryStub *)entry;
 
     return stub->key == key;
 }
 
 JS_PUBLIC_API(JSBool)
-JS_DHashMatchStringKey(JSDHashTable *table,
-                       const JSDHashEntryHdr *entry,
-                       const void *key)
-{
+JS_DHashMatchStringKey(JSDHashTable *table, const JSDHashEntryHdr *entry,
+                       const void *key) {
     const JSDHashEntryStub *stub = (const JSDHashEntryStub *)entry;
 
     /* XXX tolerate null keys on account of sloppy Mozilla callers. */
@@ -143,58 +132,41 @@ JS_DHashMatchStringKey(JSDHashTable *table,
 }
 
 JS_PUBLIC_API(void)
-JS_DHashMoveEntryStub(JSDHashTable *table,
-                      const JSDHashEntryHdr *from,
-                      JSDHashEntryHdr *to)
-{
+JS_DHashMoveEntryStub(JSDHashTable *table, const JSDHashEntryHdr *from,
+                      JSDHashEntryHdr *to) {
     memcpy(to, from, table->entrySize);
 }
 
 JS_PUBLIC_API(void)
-JS_DHashClearEntryStub(JSDHashTable *table, JSDHashEntryHdr *entry)
-{
+JS_DHashClearEntryStub(JSDHashTable *table, JSDHashEntryHdr *entry) {
     memset(entry, 0, table->entrySize);
 }
 
 JS_PUBLIC_API(void)
-JS_DHashFreeStringKey(JSDHashTable *table, JSDHashEntryHdr *entry)
-{
+JS_DHashFreeStringKey(JSDHashTable *table, JSDHashEntryHdr *entry) {
     const JSDHashEntryStub *stub = (const JSDHashEntryStub *)entry;
 
-    free((void *) stub->key);
+    free((void *)stub->key);
     memset(entry, 0, table->entrySize);
 }
 
 JS_PUBLIC_API(void)
-JS_DHashFinalizeStub(JSDHashTable *table)
-{
-}
+JS_DHashFinalizeStub(JSDHashTable *table) {}
 
 static const JSDHashTableOps stub_ops = {
-    JS_DHashAllocTable,
-    JS_DHashFreeTable,
-    JS_DHashGetKeyStub,
-    JS_DHashVoidPtrKeyStub,
-    JS_DHashMatchEntryStub,
-    JS_DHashMoveEntryStub,
-    JS_DHashClearEntryStub,
-    JS_DHashFinalizeStub,
-    NULL
-};
+    JS_DHashAllocTable,     JS_DHashFreeTable,      JS_DHashGetKeyStub,
+    JS_DHashVoidPtrKeyStub, JS_DHashMatchEntryStub, JS_DHashMoveEntryStub,
+    JS_DHashClearEntryStub, JS_DHashFinalizeStub,   NULL};
 
 JS_PUBLIC_API(const JSDHashTableOps *)
-JS_DHashGetStubOps(void)
-{
-    return &stub_ops;
-}
+JS_DHashGetStubOps(void) { return &stub_ops; }
 
 JS_PUBLIC_API(JSDHashTable *)
 JS_NewDHashTable(const JSDHashTableOps *ops, void *data, uint32 entrySize,
-                 uint32 capacity)
-{
+                 uint32 capacity) {
     JSDHashTable *table;
 
-    table = (JSDHashTable *) malloc(sizeof *table);
+    table = (JSDHashTable *)malloc(sizeof *table);
     if (!table)
         return NULL;
     if (!JS_DHashTableInit(table, ops, data, entrySize, capacity)) {
@@ -205,16 +177,14 @@ JS_NewDHashTable(const JSDHashTableOps *ops, void *data, uint32 entrySize,
 }
 
 JS_PUBLIC_API(void)
-JS_DHashTableDestroy(JSDHashTable *table)
-{
+JS_DHashTableDestroy(JSDHashTable *table) {
     JS_DHashTableFinish(table);
     free(table);
 }
 
 JS_PUBLIC_API(JSBool)
 JS_DHashTableInit(JSDHashTable *table, const JSDHashTableOps *ops, void *data,
-                  uint32 entrySize, uint32 capacity)
-{
+                  uint32 entrySize, uint32 capacity) {
     int log2;
     uint32 nbytes;
 
@@ -223,9 +193,8 @@ JS_DHashTableInit(JSDHashTable *table, const JSDHashTableOps *ops, void *data,
         fprintf(stderr,
                 "jsdhash: for the table at address %p, the given entrySize"
                 " of %lu %s favors chaining over double hashing.\n",
-                (void *)table,
-                (unsigned long) entrySize,
-                (entrySize > 16 * sizeof(void*)) ? "definitely" : "probably");
+                (void *)table, (unsigned long)entrySize,
+                (entrySize > 16 * sizeof(void *)) ? "definitely" : "probably");
     }
 #endif
 
@@ -240,8 +209,8 @@ JS_DHashTableInit(JSDHashTable *table, const JSDHashTableOps *ops, void *data,
     if (capacity >= JS_DHASH_SIZE_LIMIT)
         return JS_FALSE;
     table->hashShift = JS_DHASH_BITS - log2;
-    table->maxAlphaFrac = 0xC0;                 /* .75 */
-    table->minAlphaFrac = 0x40;                 /* .25 */
+    table->maxAlphaFrac = 0xC0; /* .75 */
+    table->minAlphaFrac = 0x40; /* .25 */
     table->entrySize = entrySize;
     table->entryCount = table->removedCount = 0;
     table->generation = 0;
@@ -263,14 +232,12 @@ JS_DHashTableInit(JSDHashTable *table, const JSDHashTableOps *ops, void *data,
 /*
  * Compute max and min load numbers (entry counts) from table params.
  */
-#define MAX_LOAD(table, size)   (((table)->maxAlphaFrac * (size)) >> 8)
-#define MIN_LOAD(table, size)   (((table)->minAlphaFrac * (size)) >> 8)
+#define MAX_LOAD(table, size) (((table)->maxAlphaFrac * (size)) >> 8)
+#define MIN_LOAD(table, size) (((table)->minAlphaFrac * (size)) >> 8)
 
 JS_PUBLIC_API(void)
-JS_DHashTableSetAlphaBounds(JSDHashTable *table,
-                            float maxAlpha,
-                            float minAlpha)
-{
+JS_DHashTableSetAlphaBounds(JSDHashTable *table, float maxAlpha,
+                            float minAlpha) {
     uint32 size;
 
     /*
@@ -288,9 +255,9 @@ JS_DHashTableSetAlphaBounds(JSDHashTable *table,
      */
     JS_ASSERT(JS_DHASH_MIN_SIZE - (maxAlpha * JS_DHASH_MIN_SIZE) >= 1);
     if (JS_DHASH_MIN_SIZE - (maxAlpha * JS_DHASH_MIN_SIZE) < 1) {
-        maxAlpha = (float)
-                   (JS_DHASH_MIN_SIZE - JS_MAX(JS_DHASH_MIN_SIZE / 256, 1))
-                   / JS_DHASH_MIN_SIZE;
+        maxAlpha =
+            (float)(JS_DHASH_MIN_SIZE - JS_MAX(JS_DHASH_MIN_SIZE / 256, 1)) /
+            JS_DHASH_MIN_SIZE;
     }
 
     /*
@@ -312,8 +279,8 @@ JS_DHashTableSetAlphaBounds(JSDHashTable *table,
  * Double hashing needs the second hash code to be relatively prime to table
  * size, so we simply make hash2 odd.
  */
-#define HASH1(hash0, shift)         ((hash0) >> (shift))
-#define HASH2(hash0,log2,shift)     ((((hash0) << (log2)) >> (shift)) | 1)
+#define HASH1(hash0, shift) ((hash0) >> (shift))
+#define HASH2(hash0, log2, shift) ((((hash0) << (log2)) >> (shift)) | 1)
 
 /*
  * Reserve keyHash 0 for free entries and 1 for removed-entry sentinels.  Note
@@ -327,31 +294,35 @@ JS_DHashTableSetAlphaBounds(JSDHashTable *table,
  * in jsdhash.h.  It used to be private to jsdhash.c, but then became public to
  * assist iterator writers who inspect table->entryStore directly.
  */
-#define COLLISION_FLAG              ((JSDHashNumber) 1)
-#define MARK_ENTRY_FREE(entry)      ((entry)->keyHash = 0)
-#define MARK_ENTRY_REMOVED(entry)   ((entry)->keyHash = 1)
-#define ENTRY_IS_REMOVED(entry)     ((entry)->keyHash == 1)
-#define ENTRY_IS_LIVE(entry)        JS_DHASH_ENTRY_IS_LIVE(entry)
-#define ENSURE_LIVE_KEYHASH(hash0)  if (hash0 < 2) hash0 -= 2; else (void)0
+#define COLLISION_FLAG ((JSDHashNumber)1)
+#define MARK_ENTRY_FREE(entry) ((entry)->keyHash = 0)
+#define MARK_ENTRY_REMOVED(entry) ((entry)->keyHash = 1)
+#define ENTRY_IS_REMOVED(entry) ((entry)->keyHash == 1)
+#define ENTRY_IS_LIVE(entry) JS_DHASH_ENTRY_IS_LIVE(entry)
+#define ENSURE_LIVE_KEYHASH(hash0)                                             \
+    if (hash0 < 2)                                                             \
+        hash0 -= 2;                                                            \
+    else                                                                       \
+        (void)0
 
 /* Match an entry's keyHash against an unstored one computed from a key. */
-#define MATCH_ENTRY_KEYHASH(entry,hash0) \
+#define MATCH_ENTRY_KEYHASH(entry, hash0)                                      \
     (((entry)->keyHash & ~COLLISION_FLAG) == (hash0))
 
 /* Compute the address of the indexed entry in table. */
-#define ADDRESS_ENTRY(table, index) \
+#define ADDRESS_ENTRY(table, index)                                            \
     ((JSDHashEntryHdr *)((table)->entryStore + (index) * (table)->entrySize))
 
 JS_PUBLIC_API(void)
-JS_DHashTableFinish(JSDHashTable *table)
-{
+JS_DHashTableFinish(JSDHashTable *table) {
     char *entryAddr, *entryLimit;
     uint32 entrySize;
     JSDHashEntryHdr *entry;
 
 #ifdef DEBUG_XXXbrendan
     static FILE *dumpfp = NULL;
-    if (!dumpfp) dumpfp = fopen("/tmp/jsdhash.bigdump", "w");
+    if (!dumpfp)
+        dumpfp = fopen("/tmp/jsdhash.bigdump", "w");
     if (dumpfp) {
 #ifdef MOZILLA_CLIENT
         NS_TraceStack(1, dumpfp);
@@ -386,10 +357,10 @@ JS_DHashTableFinish(JSDHashTable *table)
     table->ops->freeTable(table, table->entryStore);
 }
 
-static JSDHashEntryHdr * JS_DHASH_FASTCALL
-SearchTable(JSDHashTable *table, const void *key, JSDHashNumber keyHash,
-            JSDHashOperator op)
-{
+static JSDHashEntryHdr *JS_DHASH_FASTCALL SearchTable(JSDHashTable *table,
+                                                      const void *key,
+                                                      JSDHashNumber keyHash,
+                                                      JSDHashOperator op) {
     JSDHashNumber hash1, hash2;
     int hashShift, sizeLog2;
     JSDHashEntryHdr *entry, *firstRemoved;
@@ -461,9 +432,7 @@ SearchTable(JSDHashTable *table, const void *key, JSDHashNumber keyHash,
     return NULL;
 }
 
-static JSBool
-ChangeTable(JSDHashTable *table, int deltaLog2)
-{
+static JSBool ChangeTable(JSDHashTable *table, int deltaLog2) {
     int oldLog2, newLog2;
     uint32 oldCapacity, newCapacity;
     char *newEntryStore, *oldEntryStore, *oldEntryAddr;
@@ -489,7 +458,7 @@ ChangeTable(JSDHashTable *table, int deltaLog2)
     if (!newEntryStore)
         return JS_FALSE;
 
-    /* We can't fail from here on, so update table parameters. */
+        /* We can't fail from here on, so update table parameters. */
 #ifdef DEBUG
     recursionLevel = RECURSION_LEVEL(table);
 #endif
@@ -525,9 +494,9 @@ ChangeTable(JSDHashTable *table, int deltaLog2)
     return JS_TRUE;
 }
 
-JS_PUBLIC_API(JSDHashEntryHdr *) JS_DHASH_FASTCALL
-JS_DHashTableOperate(JSDHashTable *table, const void *key, JSDHashOperator op)
-{
+JS_PUBLIC_API(JSDHashEntryHdr *)
+JS_DHASH_FASTCALL JS_DHashTableOperate(JSDHashTable *table, const void *key,
+                                       JSDHashOperator op) {
     JSDHashNumber keyHash;
     JSDHashEntryHdr *entry;
     uint32 size;
@@ -544,12 +513,12 @@ JS_DHashTableOperate(JSDHashTable *table, const void *key, JSDHashOperator op)
     keyHash &= ~COLLISION_FLAG;
 
     switch (op) {
-      case JS_DHASH_LOOKUP:
+    case JS_DHASH_LOOKUP:
         METER(table->stats.lookups++);
         entry = SearchTable(table, key, keyHash, op);
         break;
 
-      case JS_DHASH_ADD:
+    case JS_DHASH_ADD:
         /*
          * If alpha is >= .75, grow or compress the table.  If key is already
          * in the table, we may grow once more than necessary, but only if we
@@ -604,7 +573,7 @@ JS_DHashTableOperate(JSDHashTable *table, const void *key, JSDHashOperator op)
         METER(else table->stats.addHits++);
         break;
 
-      case JS_DHASH_REMOVE:
+    case JS_DHASH_REMOVE:
         entry = SearchTable(table, key, keyHash, op);
         if (ENTRY_IS_LIVE(entry)) {
             /* Clear this entry and mark it as "removed". */
@@ -616,14 +585,14 @@ JS_DHashTableOperate(JSDHashTable *table, const void *key, JSDHashOperator op)
             if (size > JS_DHASH_MIN_SIZE &&
                 table->entryCount <= MIN_LOAD(table, size)) {
                 METER(table->stats.shrinks++);
-                (void) ChangeTable(table, -1);
+                (void)ChangeTable(table, -1);
             }
         }
         METER(else table->stats.removeMisses++);
         entry = NULL;
         break;
 
-      default:
+    default:
         JS_ASSERT(0);
         entry = NULL;
     }
@@ -634,9 +603,8 @@ JS_DHashTableOperate(JSDHashTable *table, const void *key, JSDHashOperator op)
 }
 
 JS_PUBLIC_API(void)
-JS_DHashTableRawRemove(JSDHashTable *table, JSDHashEntryHdr *entry)
-{
-    JSDHashNumber keyHash;      /* load first in case clearEntry goofs it */
+JS_DHashTableRawRemove(JSDHashTable *table, JSDHashEntryHdr *entry) {
+    JSDHashNumber keyHash; /* load first in case clearEntry goofs it */
 
     JS_ASSERT(JS_DHASH_ENTRY_IS_LIVE(entry));
     keyHash = entry->keyHash;
@@ -652,8 +620,7 @@ JS_DHashTableRawRemove(JSDHashTable *table, JSDHashEntryHdr *entry)
 }
 
 JS_PUBLIC_API(uint32)
-JS_DHashTableEnumerate(JSDHashTable *table, JSDHashEnumerator etor, void *arg)
-{
+JS_DHashTableEnumerate(JSDHashTable *table, JSDHashEnumerator etor, void *arg) {
     char *entryAddr, *entryLimit;
     uint32 i, capacity, entrySize, ceiling;
     JSBool didRemove;
@@ -692,10 +659,9 @@ JS_DHashTableEnumerate(JSDHashTable *table, JSDHashEnumerator etor, void *arg)
      * non-removing enumerations can count on stable table->entryStore until
      * the next non-lookup-Operate or removing-Enumerate.
      */
-    if (didRemove &&
-        (table->removedCount >= capacity >> 2 ||
-         (capacity > JS_DHASH_MIN_SIZE &&
-          table->entryCount <= MIN_LOAD(table, capacity)))) {
+    if (didRemove && (table->removedCount >= capacity >> 2 ||
+                      (capacity > JS_DHASH_MIN_SIZE &&
+                       table->entryCount <= MIN_LOAD(table, capacity)))) {
         METER(table->stats.enumShrinks++);
         capacity = table->entryCount;
         capacity += capacity >> 1;
@@ -705,7 +671,7 @@ JS_DHashTableEnumerate(JSDHashTable *table, JSDHashEnumerator etor, void *arg)
         JS_CEILING_LOG2(ceiling, capacity);
         ceiling -= JS_DHASH_BITS - table->hashShift;
 
-        (void) ChangeTable(table, ceiling);
+        (void)ChangeTable(table, ceiling);
     }
 
     DECREMENT_RECURSION_LEVEL(table);
@@ -717,8 +683,7 @@ JS_DHashTableEnumerate(JSDHashTable *table, JSDHashEnumerator etor, void *arg)
 #include <math.h>
 
 JS_PUBLIC_API(void)
-JS_DHashTableDumpMeter(JSDHashTable *table, JSDHashEnumerator dump, FILE *fp)
-{
+JS_DHashTableDumpMeter(JSDHashTable *table, JSDHashEnumerator dump, FILE *fp) {
     char *entryAddr;
     uint32 entrySize, entryCount;
     int hashShift, sizeLog2;
@@ -750,8 +715,8 @@ JS_DHashTableDumpMeter(JSDHashTable *table, JSDHashEnumerator dump, FILE *fp)
             /* Start of a (possibly unit-length) chain. */
             chainCount++;
         } else {
-            hash2 = HASH2(entry->keyHash & ~COLLISION_FLAG, sizeLog2,
-                          hashShift);
+            hash2 =
+                HASH2(entry->keyHash & ~COLLISION_FLAG, sizeLog2, hashShift);
             do {
                 chainLen++;
                 hash1 -= hash2;
@@ -787,16 +752,17 @@ JS_DHashTableDumpMeter(JSDHashTable *table, JSDHashEnumerator dump, FILE *fp)
     fprintf(fp, "         number of searches: %u\n", table->stats.searches);
     fprintf(fp, "             number of hits: %u\n", table->stats.hits);
     fprintf(fp, "           number of misses: %u\n", table->stats.misses);
-    fprintf(fp, "      mean steps per search: %g\n", table->stats.searches ?
-                                                     (double)table->stats.steps
-                                                     / table->stats.searches :
-                                                     0.);
+    fprintf(fp, "      mean steps per search: %g\n",
+            table->stats.searches
+                ? (double)table->stats.steps / table->stats.searches
+                : 0.);
     fprintf(fp, "     mean hash chain length: %g\n", mean);
     fprintf(fp, "         standard deviation: %g\n", sigma);
     fprintf(fp, "  maximum hash chain length: %u\n", maxChainLen);
     fprintf(fp, "          number of lookups: %u\n", table->stats.lookups);
     fprintf(fp, " adds that made a new entry: %u\n", table->stats.addMisses);
-    fprintf(fp, "adds that recycled removeds: %u\n", table->stats.addOverRemoved);
+    fprintf(fp, "adds that recycled removeds: %u\n",
+            table->stats.addOverRemoved);
     fprintf(fp, "   adds that found an entry: %u\n", table->stats.addHits);
     fprintf(fp, "               add failures: %u\n", table->stats.addFailures);
     fprintf(fp, "             useful removes: %u\n", table->stats.removeHits);

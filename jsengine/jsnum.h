@@ -60,7 +60,8 @@ JS_BEGIN_EXTERN_C
  * are stored in big endian`s way.
  */
 
-#if defined(__arm) || defined(__arm32__) || defined(__arm26__) || defined(__arm__)
+#if defined(__arm) || defined(__arm32__) || defined(__arm26__) ||              \
+    defined(__arm__)
 #define CPU_IS_ARM
 #endif
 
@@ -81,12 +82,32 @@ typedef union jsdpun {
  * does, but uses gcc-specific extensions.
  */
 
-#define JSDOUBLE_HI32(x) (__extension__ ({ jsdpun u; u.d = (x); u.s.hi; }))
-#define JSDOUBLE_LO32(x) (__extension__ ({ jsdpun u; u.d = (x); u.s.lo; }))
-#define JSDOUBLE_SET_HI32(x, y) \
-    (__extension__ ({ jsdpun u; u.d = (x); u.s.hi = (y); (x) = u.d; }))
-#define JSDOUBLE_SET_LO32(x, y) \
-    (__extension__ ({ jsdpun u; u.d = (x); u.s.lo = (y); (x) = u.d; }))
+#define JSDOUBLE_HI32(x)                                                       \
+    (__extension__({                                                           \
+        jsdpun u;                                                              \
+        u.d = (x);                                                             \
+        u.s.hi;                                                                \
+    }))
+#define JSDOUBLE_LO32(x)                                                       \
+    (__extension__({                                                           \
+        jsdpun u;                                                              \
+        u.d = (x);                                                             \
+        u.s.lo;                                                                \
+    }))
+#define JSDOUBLE_SET_HI32(x, y)                                                \
+    (__extension__({                                                           \
+        jsdpun u;                                                              \
+        u.d = (x);                                                             \
+        u.s.hi = (y);                                                          \
+        (x) = u.d;                                                             \
+    }))
+#define JSDOUBLE_SET_LO32(x, y)                                                \
+    (__extension__({                                                           \
+        jsdpun u;                                                              \
+        u.d = (x);                                                             \
+        u.s.lo = (y);                                                          \
+        (x) = u.d;                                                             \
+    }))
 
 #else /* not or old GNUC */
 
@@ -96,35 +117,35 @@ typedef union jsdpun {
  */
 
 #if defined(IS_LITTLE_ENDIAN) && !defined(CPU_IS_ARM)
-#define JSDOUBLE_HI32(x)        (((uint32 *)&(x))[1])
-#define JSDOUBLE_LO32(x)        (((uint32 *)&(x))[0])
+#define JSDOUBLE_HI32(x) (((uint32 *)&(x))[1])
+#define JSDOUBLE_LO32(x) (((uint32 *)&(x))[0])
 #else
-#define JSDOUBLE_HI32(x)        (((uint32 *)&(x))[0])
-#define JSDOUBLE_LO32(x)        (((uint32 *)&(x))[1])
+#define JSDOUBLE_HI32(x) (((uint32 *)&(x))[0])
+#define JSDOUBLE_LO32(x) (((uint32 *)&(x))[1])
 #endif
 
-#define JSDOUBLE_SET_HI32(x, y) (JSDOUBLE_HI32(x)=(y))
-#define JSDOUBLE_SET_LO32(x, y) (JSDOUBLE_LO32(x)=(y))
+#define JSDOUBLE_SET_HI32(x, y) (JSDOUBLE_HI32(x) = (y))
+#define JSDOUBLE_SET_LO32(x, y) (JSDOUBLE_LO32(x) = (y))
 
 #endif /* not or old GNUC */
 
-#define JSDOUBLE_HI32_SIGNBIT   0x80000000
-#define JSDOUBLE_HI32_EXPMASK   0x7ff00000
-#define JSDOUBLE_HI32_MANTMASK  0x000fffff
+#define JSDOUBLE_HI32_SIGNBIT 0x80000000
+#define JSDOUBLE_HI32_EXPMASK 0x7ff00000
+#define JSDOUBLE_HI32_MANTMASK 0x000fffff
 
-#define JSDOUBLE_IS_NaN(x)                                                    \
-    ((JSDOUBLE_HI32(x) & JSDOUBLE_HI32_EXPMASK) == JSDOUBLE_HI32_EXPMASK &&   \
+#define JSDOUBLE_IS_NaN(x)                                                     \
+    ((JSDOUBLE_HI32(x) & JSDOUBLE_HI32_EXPMASK) == JSDOUBLE_HI32_EXPMASK &&    \
      (JSDOUBLE_LO32(x) || (JSDOUBLE_HI32(x) & JSDOUBLE_HI32_MANTMASK)))
 
-#define JSDOUBLE_IS_INFINITE(x)                                               \
-    ((JSDOUBLE_HI32(x) & ~JSDOUBLE_HI32_SIGNBIT) == JSDOUBLE_HI32_EXPMASK &&  \
+#define JSDOUBLE_IS_INFINITE(x)                                                \
+    ((JSDOUBLE_HI32(x) & ~JSDOUBLE_HI32_SIGNBIT) == JSDOUBLE_HI32_EXPMASK &&   \
      !JSDOUBLE_LO32(x))
 
-#define JSDOUBLE_IS_FINITE(x)                                                 \
+#define JSDOUBLE_IS_FINITE(x)                                                  \
     ((JSDOUBLE_HI32(x) & JSDOUBLE_HI32_EXPMASK) != JSDOUBLE_HI32_EXPMASK)
 
-#define JSDOUBLE_IS_NEGZERO(d)  (JSDOUBLE_HI32(d) == JSDOUBLE_HI32_SIGNBIT && \
-                                 JSDOUBLE_LO32(d) == 0)
+#define JSDOUBLE_IS_NEGZERO(d)                                                 \
+    (JSDOUBLE_HI32(d) == JSDOUBLE_HI32_SIGNBIT && JSDOUBLE_LO32(d) == 0)
 
 /*
  * JSDOUBLE_IS_INT first checks that d is neither NaN nor infinite, to avoid
@@ -132,31 +153,27 @@ typedef union jsdpun {
  * safe) leaves i as (jsint)d.  This also avoid anomalous NaN floating point
  * comparisons under MSVC.
  */
-#define JSDOUBLE_IS_INT(d, i) (JSDOUBLE_IS_FINITE(d)                          \
-                               && !JSDOUBLE_IS_NEGZERO(d)                     \
-                               && ((d) == (i = (jsint)(d))))
+#define JSDOUBLE_IS_INT(d, i)                                                  \
+    (JSDOUBLE_IS_FINITE(d) && !JSDOUBLE_IS_NEGZERO(d) &&                       \
+     ((d) == (i = (jsint)(d))))
 
 #if defined(XP_WIN)
-#define JSDOUBLE_COMPARE(LVAL, OP, RVAL, IFNAN)                               \
-    ((JSDOUBLE_IS_NaN(LVAL) || JSDOUBLE_IS_NaN(RVAL))                         \
-     ? (IFNAN)                                                                \
-     : (LVAL) OP (RVAL))
+#define JSDOUBLE_COMPARE(LVAL, OP, RVAL, IFNAN)                                \
+    ((JSDOUBLE_IS_NaN(LVAL) || JSDOUBLE_IS_NaN(RVAL)) ? (IFNAN)                \
+                                                      : (LVAL)OP(RVAL))
 #else
-#define JSDOUBLE_COMPARE(LVAL, OP, RVAL, IFNAN) ((LVAL) OP (RVAL))
+#define JSDOUBLE_COMPARE(LVAL, OP, RVAL, IFNAN) ((LVAL)OP(RVAL))
 #endif
 
 /* Initialize number constants and runtime state for the first context. */
-extern JSBool
-js_InitRuntimeNumberState(JSContext *cx);
+extern JSBool js_InitRuntimeNumberState(JSContext *cx);
 
-extern void
-js_FinishRuntimeNumberState(JSContext *cx);
+extern void js_FinishRuntimeNumberState(JSContext *cx);
 
 /* Initialize the Number class, returning its prototype object. */
 extern JSClass js_NumberClass;
 
-extern JSObject *
-js_InitNumberClass(JSContext *cx, JSObject *obj);
+extern JSObject *js_InitNumberClass(JSContext *cx, JSObject *obj);
 
 /*
  * String constants for global function names, used in jsapi.c and jsnum.c.
@@ -169,74 +186,60 @@ extern const char js_parseFloat_str[];
 extern const char js_parseInt_str[];
 
 /* GC-allocate a new JS number. */
-extern jsdouble *
-js_NewDouble(JSContext *cx, jsdouble d, uintN gcflag);
+extern jsdouble *js_NewDouble(JSContext *cx, jsdouble d, uintN gcflag);
 
-extern void
-js_FinalizeDouble(JSContext *cx, jsdouble *dp);
+extern void js_FinalizeDouble(JSContext *cx, jsdouble *dp);
 
-extern JSBool
-js_NewDoubleValue(JSContext *cx, jsdouble d, jsval *rval);
+extern JSBool js_NewDoubleValue(JSContext *cx, jsdouble d, jsval *rval);
 
-extern JSBool
-js_NewNumberValue(JSContext *cx, jsdouble d, jsval *rval);
+extern JSBool js_NewNumberValue(JSContext *cx, jsdouble d, jsval *rval);
 
 /* Construct a Number instance that wraps around d. */
-extern JSObject *
-js_NumberToObject(JSContext *cx, jsdouble d);
+extern JSObject *js_NumberToObject(JSContext *cx, jsdouble d);
 
 /* Convert a number to a GC'ed string. */
-extern JSString *
-js_NumberToString(JSContext *cx, jsdouble d);
+extern JSString *js_NumberToString(JSContext *cx, jsdouble d);
 
 /*
  * Convert a value to a number, returning false after reporting any error,
  * otherwise returning true with *dp set.
  */
-extern JSBool
-js_ValueToNumber(JSContext *cx, jsval v, jsdouble *dp);
+extern JSBool js_ValueToNumber(JSContext *cx, jsval v, jsdouble *dp);
 
 /*
  * Convert a value or a double to an int32, according to the ECMA rules
  * for ToInt32.
  */
-extern JSBool
-js_ValueToECMAInt32(JSContext *cx, jsval v, int32 *ip);
+extern JSBool js_ValueToECMAInt32(JSContext *cx, jsval v, int32 *ip);
 
-extern JSBool
-js_DoubleToECMAInt32(JSContext *cx, jsdouble d, int32 *ip);
+extern JSBool js_DoubleToECMAInt32(JSContext *cx, jsdouble d, int32 *ip);
 
 /*
  * Convert a value or a double to a uint32, according to the ECMA rules
  * for ToUint32.
  */
-extern JSBool
-js_ValueToECMAUint32(JSContext *cx, jsval v, uint32 *ip);
+extern JSBool js_ValueToECMAUint32(JSContext *cx, jsval v, uint32 *ip);
 
-extern JSBool
-js_DoubleToECMAUint32(JSContext *cx, jsdouble d, uint32 *ip);
+extern JSBool js_DoubleToECMAUint32(JSContext *cx, jsdouble d, uint32 *ip);
 
 /*
  * Convert a value to a number, then to an int32 if it fits by rounding to
  * nearest; but failing with an error report if the double is out of range
  * or unordered.
  */
-extern JSBool
-js_ValueToInt32(JSContext *cx, jsval v, int32 *ip);
+extern JSBool js_ValueToInt32(JSContext *cx, jsval v, int32 *ip);
 
 /*
  * Convert a value to a number, then to a uint16 according to the ECMA rules
  * for ToUint16.
  */
-extern JSBool
-js_ValueToUint16(JSContext *cx, jsval v, uint16 *ip);
+extern JSBool js_ValueToUint16(JSContext *cx, jsval v, uint16 *ip);
 
 /*
  * Convert a jsdouble to an integral number, stored in a jsdouble.
  * If d is NaN, return 0.  If d is an infinity, return it without conversion.
  */
-extern jsdouble
-js_DoubleToInteger(jsdouble d);
+extern jsdouble js_DoubleToInteger(jsdouble d);
 
 /*
  * Similar to strtod except that it replaces overflows with infinities of the
@@ -248,8 +251,8 @@ js_DoubleToInteger(jsdouble d);
  * If the string does not contain a number, set *ep to s and return 0.0 in dp.
  * Return false if out of memory.
  */
-extern JSBool
-js_strtod(JSContext *cx, const jschar *s, const jschar **ep, jsdouble *dp);
+extern JSBool js_strtod(JSContext *cx, const jschar *s, const jschar **ep,
+                        jsdouble *dp);
 
 /*
  * Similar to strtol except that it handles integers of arbitrary size.
@@ -260,8 +263,8 @@ js_strtod(JSContext *cx, const jschar *s, const jschar **ep, jsdouble *dp);
  * If the string does not contain a number, set *ep to s and return 0.0 in dp.
  * Return false if out of memory.
  */
-extern JSBool
-js_strtointeger(JSContext *cx, const jschar *s, const jschar **ep, jsint radix, jsdouble *dp);
+extern JSBool js_strtointeger(JSContext *cx, const jschar *s, const jschar **ep,
+                              jsint radix, jsdouble *dp);
 
 JS_END_EXTERN_C
 

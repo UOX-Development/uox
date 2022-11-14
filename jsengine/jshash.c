@@ -40,65 +40,50 @@
 /*
  * PR hash table package.
  */
+#include "jshash.h" /* Added by JSIFY */
+#include "jsbit.h"
 #include "jsstddef.h"
+#include "jstypes.h"
+#include "jsutil.h" /* Added by JSIFY */
 #include <stdlib.h>
 #include <string.h>
-#include "jstypes.h"
-#include "jsbit.h"
-#include "jsutil.h" /* Added by JSIFY */
-#include "jshash.h" /* Added by JSIFY */
 
 /* Compute the number of buckets in ht */
-#define NBUCKETS(ht)    JS_BIT(JS_HASH_BITS - (ht)->shift)
+#define NBUCKETS(ht) JS_BIT(JS_HASH_BITS - (ht)->shift)
 
 /* The smallest table has 16 buckets */
-#define MINBUCKETSLOG2  4
-#define MINBUCKETS      JS_BIT(MINBUCKETSLOG2)
+#define MINBUCKETSLOG2 4
+#define MINBUCKETS JS_BIT(MINBUCKETSLOG2)
 
 /* Compute the maximum entries given n buckets that we will tolerate, ~90% */
-#define OVERLOADED(n)   ((n) - ((n) >> 3))
+#define OVERLOADED(n) ((n) - ((n) >> 3))
 
 /* Compute the number of entries below which we shrink the table by half */
-#define UNDERLOADED(n)  (((n) > MINBUCKETS) ? ((n) >> 2) : 0)
+#define UNDERLOADED(n) (((n) > MINBUCKETS) ? ((n) >> 2) : 0)
 
 /*
 ** Stubs for default hash allocator ops.
 */
-static void *
-DefaultAllocTable(void *pool, size_t size)
-{
-    return malloc(size);
+static void *DefaultAllocTable(void *pool, size_t size) { return malloc(size); }
+
+static void DefaultFreeTable(void *pool, void *item) { free(item); }
+
+static JSHashEntry *DefaultAllocEntry(void *pool, const void *key) {
+    return (JSHashEntry *)malloc(sizeof(JSHashEntry));
 }
 
-static void
-DefaultFreeTable(void *pool, void *item)
-{
-    free(item);
-}
-
-static JSHashEntry *
-DefaultAllocEntry(void *pool, const void *key)
-{
-    return (JSHashEntry*) malloc(sizeof(JSHashEntry));
-}
-
-static void
-DefaultFreeEntry(void *pool, JSHashEntry *he, uintN flag)
-{
+static void DefaultFreeEntry(void *pool, JSHashEntry *he, uintN flag) {
     if (flag == HT_FREE_ENTRY)
         free(he);
 }
 
 static JSHashAllocOps defaultHashAllocOps = {
-    DefaultAllocTable, DefaultFreeTable,
-    DefaultAllocEntry, DefaultFreeEntry
-};
+    DefaultAllocTable, DefaultFreeTable, DefaultAllocEntry, DefaultFreeEntry};
 
 JS_PUBLIC_API(JSHashTable *)
-JS_NewHashTable(uint32 n, JSHashFunction keyHash,
-                JSHashComparator keyCompare, JSHashComparator valueCompare,
-                JSHashAllocOps *allocOps, void *allocPriv)
-{
+JS_NewHashTable(uint32 n, JSHashFunction keyHash, JSHashComparator keyCompare,
+                JSHashComparator valueCompare, JSHashAllocOps *allocOps,
+                void *allocPriv) {
     JSHashTable *ht;
     size_t nb;
 
@@ -110,16 +95,17 @@ JS_NewHashTable(uint32 n, JSHashFunction keyHash,
             return NULL;
     }
 
-    if (!allocOps) allocOps = &defaultHashAllocOps;
+    if (!allocOps)
+        allocOps = &defaultHashAllocOps;
 
-    ht = (JSHashTable*) allocOps->allocTable(allocPriv, sizeof *ht);
+    ht = (JSHashTable *)allocOps->allocTable(allocPriv, sizeof *ht);
     if (!ht)
         return NULL;
     memset(ht, 0, sizeof *ht);
     ht->shift = JS_HASH_BITS - n;
     n = JS_BIT(n);
     nb = n * sizeof(JSHashEntry *);
-    ht->buckets = (JSHashEntry**) allocOps->allocTable(allocPriv, nb);
+    ht->buckets = (JSHashEntry **)allocOps->allocTable(allocPriv, nb);
     if (!ht->buckets) {
         allocOps->freeTable(allocPriv, ht);
         return NULL;
@@ -135,8 +121,7 @@ JS_NewHashTable(uint32 n, JSHashFunction keyHash,
 }
 
 JS_PUBLIC_API(void)
-JS_HashTableDestroy(JSHashTable *ht)
-{
+JS_HashTableDestroy(JSHashTable *ht) {
     uint32 i, n;
     JSHashEntry *he, **hep;
     JSHashAllocOps *allocOps = ht->allocOps;
@@ -163,12 +148,11 @@ JS_HashTableDestroy(JSHashTable *ht)
 /*
  * Multiplicative hash, from Knuth 6.4.
  */
-#define BUCKET_HEAD(ht, keyHash)                                              \
-    (&(ht)->buckets[((keyHash) * JS_GOLDEN_RATIO) >> (ht)->shift])
+#define BUCKET_HEAD(ht, keyHash)                                               \
+    (&(ht)->buckets[((keyHash)*JS_GOLDEN_RATIO) >> (ht)->shift])
 
 JS_PUBLIC_API(JSHashEntry **)
-JS_HashTableRawLookup(JSHashTable *ht, JSHashNumber keyHash, const void *key)
-{
+JS_HashTableRawLookup(JSHashTable *ht, JSHashNumber keyHash, const void *key) {
     JSHashEntry *he, **hep, **hep0;
 
 #ifdef HASHMETER
@@ -193,9 +177,7 @@ JS_HashTableRawLookup(JSHashTable *ht, JSHashNumber keyHash, const void *key)
     return hep;
 }
 
-static JSBool
-Resize(JSHashTable *ht, uint32 newshift)
-{
+static JSBool Resize(JSHashTable *ht, uint32 newshift) {
     size_t nb, nentries, i;
     JSHashEntry **oldbuckets, *he, *next, **hep;
 #ifdef DEBUG
@@ -207,12 +189,12 @@ Resize(JSHashTable *ht, uint32 newshift)
     nb = (size_t)1 << (JS_HASH_BITS - newshift);
 
     /* Integer overflow protection. */
-    if (nb > (size_t)-1 / sizeof(JSHashEntry*))
+    if (nb > (size_t)-1 / sizeof(JSHashEntry *))
         return JS_FALSE;
-    nb *= sizeof(JSHashEntry*);
+    nb *= sizeof(JSHashEntry *);
 
     oldbuckets = ht->buckets;
-    ht->buckets = (JSHashEntry**)ht->allocOps->allocTable(ht->allocPriv, nb);
+    ht->buckets = (JSHashEntry **)ht->allocOps->allocTable(ht->allocPriv, nb);
     if (!ht->buckets) {
         ht->buckets = oldbuckets;
         return JS_FALSE;
@@ -245,9 +227,8 @@ Resize(JSHashTable *ht, uint32 newshift)
 }
 
 JS_PUBLIC_API(JSHashEntry *)
-JS_HashTableRawAdd(JSHashTable *ht, JSHashEntry **hep,
-                   JSHashNumber keyHash, const void *key, void *value)
-{
+JS_HashTableRawAdd(JSHashTable *ht, JSHashEntry **hep, JSHashNumber keyHash,
+                   const void *key, void *value) {
     uint32 n;
     JSHashEntry *he;
 
@@ -276,8 +257,7 @@ JS_HashTableRawAdd(JSHashTable *ht, JSHashEntry **hep,
 }
 
 JS_PUBLIC_API(JSHashEntry *)
-JS_HashTableAdd(JSHashTable *ht, const void *key, void *value)
-{
+JS_HashTableAdd(JSHashTable *ht, const void *key, void *value) {
     JSHashNumber keyHash;
     JSHashEntry *he, **hep;
 
@@ -298,8 +278,7 @@ JS_HashTableAdd(JSHashTable *ht, const void *key, void *value)
 }
 
 JS_PUBLIC_API(void)
-JS_HashTableRawRemove(JSHashTable *ht, JSHashEntry **hep, JSHashEntry *he)
-{
+JS_HashTableRawRemove(JSHashTable *ht, JSHashEntry **hep, JSHashEntry *he) {
     uint32 n;
 
     *hep = he->next;
@@ -316,8 +295,7 @@ JS_HashTableRawRemove(JSHashTable *ht, JSHashEntry **hep, JSHashEntry *he)
 }
 
 JS_PUBLIC_API(JSBool)
-JS_HashTableRemove(JSHashTable *ht, const void *key)
-{
+JS_HashTableRemove(JSHashTable *ht, const void *key) {
     JSHashNumber keyHash;
     JSHashEntry *he, **hep;
 
@@ -332,8 +310,7 @@ JS_HashTableRemove(JSHashTable *ht, const void *key)
 }
 
 JS_PUBLIC_API(void *)
-JS_HashTableLookup(JSHashTable *ht, const void *key)
-{
+JS_HashTableLookup(JSHashTable *ht, const void *key) {
     JSHashNumber keyHash;
     JSHashEntry *he, **hep;
 
@@ -351,8 +328,7 @@ JS_HashTableLookup(JSHashTable *ht, const void *key)
 ** Return a count of the number of elements scanned.
 */
 JS_PUBLIC_API(int)
-JS_HashTableEnumerateEntries(JSHashTable *ht, JSHashEnumerator f, void *arg)
-{
+JS_HashTableEnumerateEntries(JSHashTable *ht, JSHashEnumerator f, void *arg) {
     JSHashEntry *he, **hep, **bucket;
     uint32 nlimit, n, nbuckets, newlog2;
     int rv;
@@ -401,8 +377,7 @@ out:
 #include <stdio.h>
 
 JS_PUBLIC_API(void)
-JS_HashTableDumpMeter(JSHashTable *ht, JSHashEnumerator dump, FILE *fp)
-{
+JS_HashTableDumpMeter(JSHashTable *ht, JSHashEnumerator dump, FILE *fp) {
     double sqsum, mean, variance, sigma;
     uint32 nchains, nbuckets, nentries;
     uint32 i, n, maxChain, maxChainLen;
@@ -439,8 +414,8 @@ JS_HashTableDumpMeter(JSHashTable *ht, JSHashEnumerator dump, FILE *fp)
     fprintf(fp, "     number of entries: %u\n", ht->nentries);
     fprintf(fp, "       number of grows: %u\n", ht->ngrows);
     fprintf(fp, "     number of shrinks: %u\n", ht->nshrinks);
-    fprintf(fp, "   mean steps per hash: %g\n", (double)ht->nsteps
-                                                / ht->nlookups);
+    fprintf(fp, "   mean steps per hash: %g\n",
+            (double)ht->nsteps / ht->nlookups);
     fprintf(fp, "mean hash chain length: %g\n", mean);
     fprintf(fp, "    standard deviation: %g\n", sigma);
     fprintf(fp, " max hash chain length: %u\n", maxChainLen);
@@ -453,8 +428,7 @@ JS_HashTableDumpMeter(JSHashTable *ht, JSHashEnumerator dump, FILE *fp)
 #endif /* HASHMETER */
 
 JS_PUBLIC_API(int)
-JS_HashTableDump(JSHashTable *ht, JSHashEnumerator dump, FILE *fp)
-{
+JS_HashTableDump(JSHashTable *ht, JSHashEnumerator dump, FILE *fp) {
     int count;
 
     count = JS_HashTableEnumerateEntries(ht, dump, fp);
@@ -465,8 +439,7 @@ JS_HashTableDump(JSHashTable *ht, JSHashEnumerator dump, FILE *fp)
 }
 
 JS_PUBLIC_API(JSHashNumber)
-JS_HashString(const void *key)
-{
+JS_HashString(const void *key) {
     JSHashNumber h;
     const unsigned char *s;
 
@@ -477,7 +450,4 @@ JS_HashString(const void *key)
 }
 
 JS_PUBLIC_API(int)
-JS_CompareValues(const void *v1, const void *v2)
-{
-    return v1 == v2;
-}
+JS_CompareValues(const void *v1, const void *v2) { return v1 == v2; }

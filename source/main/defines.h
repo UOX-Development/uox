@@ -1,4 +1,4 @@
-//Copyright © 2022 UOX Development. All rights reserved.
+// Copyright © 2022 UOX Development. All rights reserved.
 
 #ifndef defines_h
 #define defines_h

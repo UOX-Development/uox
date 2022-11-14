@@ -41,18 +41,17 @@
 /*
  * PR assertion checker.
  */
+#include "jsutil.h"
 #include "jsstddef.h"
+#include "jstypes.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include "jstypes.h"
-#include "jsutil.h"
 
 #ifdef WIN32
-#    include <windows.h>
+#include <windows.h>
 #endif
 
-JS_PUBLIC_API(void) JS_Assert(const char *s, const char *file, JSIntn ln)
-{
+JS_PUBLIC_API(void) JS_Assert(const char *s, const char *file, JSIntn ln) {
     fprintf(stderr, "Assertion failure: %s, at %s:%d\n", s, file, ln);
 #if defined(WIN32)
     DebugBreak();
@@ -66,16 +65,14 @@ JS_PUBLIC_API(void) JS_Assert(const char *s, const char *file, JSIntn ln)
 #if defined DEBUG_notme && defined XP_UNIX
 
 #define __USE_GNU 1
-#include <dlfcn.h>
-#include <string.h>
 #include "jshash.h"
 #include "jsprf.h"
+#include <dlfcn.h>
+#include <string.h>
 
 JSCallsite js_calltree_root = {0, NULL, NULL, 0, NULL, NULL, NULL, NULL};
 
-static JSCallsite *
-CallTree(void **bp)
-{
+static JSCallsite *CallTree(void **bp) {
     void **bpup, **bpdown, *pc;
     JSCallsite *parent, *site, **csp;
     Dl_info info;
@@ -86,9 +83,9 @@ CallTree(void **bp)
     /* Reverse the stack frame list to avoid recursion. */
     bpup = NULL;
     for (;;) {
-        bpdown = (void**) bp[0];
-        bp[0] = (void*) bpup;
-        if ((void**) bpdown[0] < bpdown)
+        bpdown = (void **)bp[0];
+        bp[0] = (void *)bpup;
+        if ((void **)bpdown[0] < bpdown)
             break;
         bpup = bp;
         bp = bpdown;
@@ -97,8 +94,8 @@ CallTree(void **bp)
     /* Reverse the stack again, finding and building a path in the tree. */
     parent = &js_calltree_root;
     do {
-        bpup = (void**) bp[0];
-        bp[0] = (void*) bpdown;
+        bpup = (void **)bp[0];
+        bp[0] = (void *)bpdown;
         pc = bp[1];
 
         csp = &parent->kids;
@@ -132,19 +129,19 @@ CallTree(void **bp)
             return NULL;
         }
 
-/* XXXbe sub 0x08040000? or something, see dbaron bug with tenthumbs comment */
+        /* XXXbe sub 0x08040000? or something, see dbaron bug with tenthumbs
+         * comment */
         symbol = info.dli_sname;
-        offset = (char*)pc - (char*)info.dli_fbase;
-        method = symbol
-                 ? strdup(symbol)
-                 : JS_smprintf("%s+%X",
-                               info.dli_fname ? info.dli_fname : "main",
-                               offset);
+        offset = (char *)pc - (char *)info.dli_fbase;
+        method = symbol ? strdup(symbol)
+                        : JS_smprintf("%s+%X",
+                                      info.dli_fname ? info.dli_fname : "main",
+                                      offset);
         if (!method)
             return NULL;
 
         /* Create a new callsite record. */
-        site = (JSCallsite *) malloc(sizeof(JSCallsite));
+        site = (JSCallsite *)malloc(sizeof(JSCallsite));
         if (!site)
             return NULL;
 
@@ -158,7 +155,7 @@ CallTree(void **bp)
         parent->kids = site;
         site->kids = NULL;
 
-      upward:
+    upward:
         parent = site;
         bpdown = bp;
         bp = bpup;
@@ -167,26 +164,24 @@ CallTree(void **bp)
     return site;
 }
 
-JSCallsite *
-JS_Backtrace(int skip)
-{
+JSCallsite *JS_Backtrace(int skip) {
     void **bp, **bpdown;
 
     /* Stack walking code adapted from Kipp's "leaky". */
 #if defined(__i386)
-    __asm__( "movl %%ebp, %0" : "=g"(bp));
+    __asm__("movl %%ebp, %0" : "=g"(bp));
 #elif defined(__x86_64__)
-    __asm__( "movq %%rbp, %0" : "=g"(bp));
+    __asm__("movq %%rbp, %0" : "=g"(bp));
 #else
     /*
      * It would be nice if this worked uniformly, but at least on i386 and
      * x86_64, it stopped working with gcc 4.1, because it points to the
      * end of the saved registers instead of the start.
      */
-    bp = (void**) __builtin_frame_address(0);
+    bp = (void **)__builtin_frame_address(0);
 #endif
     while (--skip >= 0) {
-        bpdown = (void**) *bp++;
+        bpdown = (void **)*bp++;
         if (bpdown < bp)
             break;
         bp = bpdown;

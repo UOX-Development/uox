@@ -49,16 +49,15 @@ JS_BEGIN_EXTERN_C
 #ifdef DEBUG
 
 extern JS_PUBLIC_API(void)
-JS_Assert(const char *s, const char *file, JSIntn ln);
-#define JS_ASSERT(_expr) \
-    ((_expr)?((void)0):JS_Assert(# _expr,__FILE__,__LINE__))
+    JS_Assert(const char *s, const char *file, JSIntn ln);
+#define JS_ASSERT(_expr)                                                       \
+    ((_expr) ? ((void)0) : JS_Assert(#_expr, __FILE__, __LINE__))
 
-#define JS_NOT_REACHED(_reasonStr) \
-    JS_Assert(_reasonStr,__FILE__,__LINE__)
+#define JS_NOT_REACHED(_reasonStr) JS_Assert(_reasonStr, __FILE__, __LINE__)
 
 #else
 
-#define JS_ASSERT(expr) ((void) 0)
+#define JS_ASSERT(expr) ((void)0)
 #define JS_NOT_REACHED(reasonStr)
 
 #endif /* defined(DEBUG) */
@@ -68,11 +67,10 @@ JS_Assert(const char *s, const char *file, JSIntn ln);
  * The macro should be used only once per source line in places where
  * a "typedef" declaration is allowed.
  */
-#define JS_STATIC_ASSERT(condition)                                           \
-    JS_STATIC_ASSERT_IMPL(condition, __LINE__)
-#define JS_STATIC_ASSERT_IMPL(condition, line)                                \
+#define JS_STATIC_ASSERT(condition) JS_STATIC_ASSERT_IMPL(condition, __LINE__)
+#define JS_STATIC_ASSERT_IMPL(condition, line)                                 \
     JS_STATIC_ASSERT_IMPL2(condition, line)
-#define JS_STATIC_ASSERT_IMPL2(condition, line)                               \
+#define JS_STATIC_ASSERT_IMPL2(condition, line)                                \
     typedef int js_static_assert_line_##line[(condition) ? 1 : -1]
 
 /*
@@ -87,14 +85,14 @@ extern JS_PUBLIC_API(void) JS_Abort(void);
 typedef struct JSCallsite JSCallsite;
 
 struct JSCallsite {
-    uint32      pc;
-    char        *name;
-    const char  *library;
-    int         offset;
-    JSCallsite  *parent;
-    JSCallsite  *siblings;
-    JSCallsite  *kids;
-    void        *handy;
+    uint32 pc;
+    char *name;
+    const char *library;
+    int offset;
+    JSCallsite *parent;
+    JSCallsite *siblings;
+    JSCallsite *kids;
+    void *handy;
 };
 
 extern JSCallsite *JS_Backtrace(int skip);

@@ -36,7 +36,8 @@
  * ***** END LICENSE BLOCK ***** */
 
 /* -*- Mode: C; tab-width: 8 -*-
- * Copyright (C) 1998-1999 Netscape Communications Corporation, All Rights Reserved.
+ * Copyright (C) 1998-1999 Netscape Communications Corporation, All Rights
+ * Reserved.
  */
 
 #ifndef jsmath_h___
@@ -49,8 +50,7 @@ JS_BEGIN_EXTERN_C
 
 extern JSClass js_MathClass;
 
-extern JSObject *
-js_InitMathClass(JSContext *cx, JSObject *obj);
+extern JSObject *js_InitMathClass(JSContext *cx, JSObject *obj);
 
 JS_END_EXTERN_C
 

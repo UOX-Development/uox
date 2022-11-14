@@ -46,8 +46,8 @@
 #ifndef _LIBMATH_H
 #define _LIBMATH_H
 
-#include <math.h>
 #include "jsconfig.h"
+#include <math.h>
 
 /*
  * Define on which platforms to use fdlibm. Not used by default under
@@ -110,9 +110,9 @@ extern double js_copysign(double, double);
 
 #undef __P
 #ifdef __STDC__
-#define __P(p)  p
+#define __P(p) p
 #else
-#define __P(p)  ()
+#define __P(p) ()
 #endif
 
 #if (defined _WIN32 && !defined WINCE) || defined SUNOS4
@@ -233,7 +233,7 @@ extern double fd_pow __P((double, double));
 
 extern double fd_atan __P((double));
 extern double fd_ceil __P((double));
-extern double fd_pow __P((double,double));
+extern double fd_pow __P((double, double));
 extern double fd_tan __P((double));
 
 #else /* other platform.. generic paranoid slow fdlibm */
@@ -263,4 +263,3 @@ extern double fd_copysign __P((double, double));
 #endif /* JS_USE_FDLIBM_MATH */
 
 #endif /* _LIBMATH_H */
-

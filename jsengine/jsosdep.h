@@ -45,7 +45,7 @@
 
 #if defined(XP_WIN) || defined(XP_OS2)
 
-#if defined(_WIN32) || defined (XP_OS2)
+#if defined(_WIN32) || defined(XP_OS2)
 #define JS_HAVE_LONG_LONG
 #else
 #undef JS_HAVE_LONG_LONG
@@ -55,7 +55,6 @@
 #ifdef XP_BEOS
 #define JS_HAVE_LONG_LONG
 #endif
-
 
 #ifdef XP_UNIX
 
@@ -112,4 +111,3 @@ extern void *sbrk(int);
 #endif /* XP_UNIX */
 
 #endif /* jsosdep_h___ */
-

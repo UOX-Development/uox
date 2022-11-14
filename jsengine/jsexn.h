@@ -51,8 +51,7 @@ extern JSClass js_ErrorClass;
 /*
  * Initialize the exception constructor/prototype hierarchy.
  */
-extern JSObject *
-js_InitExceptionClasses(JSContext *cx, JSObject *obj);
+extern JSObject *js_InitExceptionClasses(JSContext *cx, JSObject *obj);
 
 /*
  * Given a JSErrorReport, check to see if there is an exception associated with
@@ -62,8 +61,8 @@ js_InitExceptionClasses(JSContext *cx, JSObject *obj);
  * error reports so flagged.  Returns JS_TRUE if an associated exception is
  * found and set, JS_FALSE otherwise..
  */
-extern JSBool
-js_ErrorToException(JSContext *cx, const char *message, JSErrorReport *reportp);
+extern JSBool js_ErrorToException(JSContext *cx, const char *message,
+                                  JSErrorReport *reportp);
 
 /*
  * Called if a JS API call to js_Execute or js_InternalCall fails; calls the
@@ -81,14 +80,12 @@ js_ErrorToException(JSContext *cx, const char *message, JSErrorReport *reportp);
  * other contexts may want to use an error reporter that ignores errors with
  * this flag.
  */
-extern JSBool
-js_ReportUncaughtException(JSContext *cx);
+extern JSBool js_ReportUncaughtException(JSContext *cx);
 
-extern JSErrorReport *
-js_ErrorFromException(JSContext *cx, jsval exn);
+extern JSErrorReport *js_ErrorFromException(JSContext *cx, jsval exn);
 
 extern const JSErrorFormatString *
-js_GetLocalizedErrorMessage(JSContext* cx, void *userRef, const char *locale,
+js_GetLocalizedErrorMessage(JSContext *cx, void *userRef, const char *locale,
                             const uintN errorNumber);
 
 JS_END_EXTERN_C

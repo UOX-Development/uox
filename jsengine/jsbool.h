@@ -54,22 +54,18 @@ JS_BEGIN_EXTERN_C
  *
  * JSVAL_ARETURN is used to throw asynchronous return for generator.close().
  */
-#define JSVAL_HOLE      BOOLEAN_TO_JSVAL(2)
-#define JSVAL_ARETURN   BOOLEAN_TO_JSVAL(3)
+#define JSVAL_HOLE BOOLEAN_TO_JSVAL(2)
+#define JSVAL_ARETURN BOOLEAN_TO_JSVAL(3)
 
 extern JSClass js_BooleanClass;
 
-extern JSObject *
-js_InitBooleanClass(JSContext *cx, JSObject *obj);
+extern JSObject *js_InitBooleanClass(JSContext *cx, JSObject *obj);
 
-extern JSObject *
-js_BooleanToObject(JSContext *cx, JSBool b);
+extern JSObject *js_BooleanToObject(JSContext *cx, JSBool b);
 
-extern JSString *
-js_BooleanToString(JSContext *cx, JSBool b);
+extern JSString *js_BooleanToString(JSContext *cx, JSBool b);
 
-extern JSBool
-js_ValueToBoolean(JSContext *cx, jsval v, JSBool *bp);
+extern JSBool js_ValueToBoolean(JSContext *cx, jsval v, JSBool *bp);
 
 JS_END_EXTERN_C
 

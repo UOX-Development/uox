@@ -43,13 +43,13 @@
 /*
  * JS symbol tables.
  */
-#include "jstypes.h"
 #include "jsobj.h"
 #include "jsprvtd.h"
 #include "jspubtd.h"
+#include "jstypes.h"
 
 #ifdef JS_THREADSAFE
-# include "jslock.h"
+#include "jslock.h"
 #endif
 
 /*
@@ -200,208 +200,205 @@
  */
 
 struct JSScope {
-    JSObjectMap     map;                /* base class state */
-    JSObject        *object;            /* object that owns this scope */
-    uint8           flags;              /* flags, see below */
-    int8            hashShift;          /* multiplicative hash shift */
-    uint16          spare;              /* reserved */
-    uint32          entryCount;         /* number of entries in table */
-    uint32          removedCount;       /* removed entry sentinels in table */
-    JSScopeProperty **table;            /* table of ptrs to shared tree nodes */
-    JSScopeProperty *lastProp;          /* pointer to last property added */
+    JSObjectMap map;           /* base class state */
+    JSObject *object;          /* object that owns this scope */
+    uint8 flags;               /* flags, see below */
+    int8 hashShift;            /* multiplicative hash shift */
+    uint16 spare;              /* reserved */
+    uint32 entryCount;         /* number of entries in table */
+    uint32 removedCount;       /* removed entry sentinels in table */
+    JSScopeProperty **table;   /* table of ptrs to shared tree nodes */
+    JSScopeProperty *lastProp; /* pointer to last property added */
 #ifdef JS_THREADSAFE
-    JSContext       *ownercx;           /* creating context, NULL if shared */
-    JSThinLock      lock;               /* binary semaphore protecting scope */
-    union {                             /* union lockful and lock-free state: */
-        jsrefcount  count;              /* lock entry count for reentrancy */
-        JSScope     *link;              /* next link in rt->scopeSharingTodo */
+    JSContext *ownercx;   /* creating context, NULL if shared */
+    JSThinLock lock;      /* binary semaphore protecting scope */
+    union {               /* union lockful and lock-free state: */
+        jsrefcount count; /* lock entry count for reentrancy */
+        JSScope *link;    /* next link in rt->scopeSharingTodo */
     } u;
 #ifdef DEBUG
-    const char      *file[4];           /* file where lock was (re-)taken */
-    unsigned int    line[4];            /* line where lock was (re-)taken */
+    const char *file[4];  /* file where lock was (re-)taken */
+    unsigned int line[4]; /* line where lock was (re-)taken */
 #endif
 #endif
 };
 
-#define OBJ_SCOPE(obj)                  ((JSScope *)(obj)->map)
+#define OBJ_SCOPE(obj) ((JSScope *)(obj)->map)
 
 /* By definition, hashShift = JS_DHASH_BITS - log2(capacity). */
-#define SCOPE_CAPACITY(scope)           JS_BIT(JS_DHASH_BITS-(scope)->hashShift)
+#define SCOPE_CAPACITY(scope) JS_BIT(JS_DHASH_BITS - (scope)->hashShift)
 
 /* Scope flags and some macros to hide them from other files than jsscope.c. */
-#define SCOPE_MIDDLE_DELETE             0x0001
-#define SCOPE_SEALED                    0x0002
+#define SCOPE_MIDDLE_DELETE 0x0001
+#define SCOPE_SEALED 0x0002
 
-#define SCOPE_HAD_MIDDLE_DELETE(scope)  ((scope)->flags & SCOPE_MIDDLE_DELETE)
-#define SCOPE_SET_MIDDLE_DELETE(scope)  ((scope)->flags |= SCOPE_MIDDLE_DELETE)
-#define SCOPE_CLR_MIDDLE_DELETE(scope)  ((scope)->flags &= ~SCOPE_MIDDLE_DELETE)
+#define SCOPE_HAD_MIDDLE_DELETE(scope) ((scope)->flags & SCOPE_MIDDLE_DELETE)
+#define SCOPE_SET_MIDDLE_DELETE(scope) ((scope)->flags |= SCOPE_MIDDLE_DELETE)
+#define SCOPE_CLR_MIDDLE_DELETE(scope) ((scope)->flags &= ~SCOPE_MIDDLE_DELETE)
 
-#define SCOPE_IS_SEALED(scope)          ((scope)->flags & SCOPE_SEALED)
-#define SCOPE_SET_SEALED(scope)         ((scope)->flags |= SCOPE_SEALED)
+#define SCOPE_IS_SEALED(scope) ((scope)->flags & SCOPE_SEALED)
+#define SCOPE_SET_SEALED(scope) ((scope)->flags |= SCOPE_SEALED)
 #if 0
 /*
  * Don't define this, it can't be done safely because JS_LOCK_OBJ will avoid
  * taking the lock if the object owns its scope and the scope is sealed.
  */
-#define SCOPE_CLR_SEALED(scope)         ((scope)->flags &= ~SCOPE_SEALED)
+#define SCOPE_CLR_SEALED(scope) ((scope)->flags &= ~SCOPE_SEALED)
 #endif
 
 /*
  * A little information hiding for scope->lastProp, in case it ever becomes
  * a tagged pointer again.
  */
-#define SCOPE_LAST_PROP(scope)          ((scope)->lastProp)
-#define SCOPE_REMOVE_LAST_PROP(scope)   ((scope)->lastProp =                  \
-                                         (scope)->lastProp->parent)
+#define SCOPE_LAST_PROP(scope) ((scope)->lastProp)
+#define SCOPE_REMOVE_LAST_PROP(scope)                                          \
+    ((scope)->lastProp = (scope)->lastProp->parent)
 
 struct JSScopeProperty {
-    jsid            id;                 /* int-tagged jsval/untagged JSAtom* */
-    JSPropertyOp    getter;             /* getter and setter hooks or objects */
-    JSPropertyOp    setter;
-    uint32          slot;               /* index in obj->slots vector */
-    uint8           attrs;              /* attributes, see jsapi.h JSPROP_* */
-    uint8           flags;              /* flags, see below for defines */
-    int16           shortid;            /* tinyid, or local arg/var index */
-    JSScopeProperty *parent;            /* parent node, reverse for..in order */
-    JSScopeProperty *kids;              /* null, single child, or a tagged ptr
-                                           to many-kids data structure */
+    jsid id;             /* int-tagged jsval/untagged JSAtom* */
+    JSPropertyOp getter; /* getter and setter hooks or objects */
+    JSPropertyOp setter;
+    uint32 slot;             /* index in obj->slots vector */
+    uint8 attrs;             /* attributes, see jsapi.h JSPROP_* */
+    uint8 flags;             /* flags, see below for defines */
+    int16 shortid;           /* tinyid, or local arg/var index */
+    JSScopeProperty *parent; /* parent node, reverse for..in order */
+    JSScopeProperty *kids;   /* null, single child, or a tagged ptr
+                                to many-kids data structure */
 };
 
 /* JSScopeProperty pointer tag bit indicating a collision. */
-#define SPROP_COLLISION                 ((jsuword)1)
-#define SPROP_REMOVED                   ((JSScopeProperty *) SPROP_COLLISION)
+#define SPROP_COLLISION ((jsuword)1)
+#define SPROP_REMOVED ((JSScopeProperty *)SPROP_COLLISION)
 
 /* Macros to get and set sprop pointer values and collision flags. */
-#define SPROP_IS_FREE(sprop)            ((sprop) == NULL)
-#define SPROP_IS_REMOVED(sprop)         ((sprop) == SPROP_REMOVED)
-#define SPROP_IS_LIVE(sprop)            ((sprop) > SPROP_REMOVED)
-#define SPROP_FLAG_COLLISION(spp,sprop) (*(spp) = (JSScopeProperty *)         \
-                                         ((jsuword)(sprop) | SPROP_COLLISION))
-#define SPROP_HAD_COLLISION(sprop)      ((jsuword)(sprop) & SPROP_COLLISION)
-#define SPROP_FETCH(spp)                SPROP_CLEAR_COLLISION(*(spp))
+#define SPROP_IS_FREE(sprop) ((sprop) == NULL)
+#define SPROP_IS_REMOVED(sprop) ((sprop) == SPROP_REMOVED)
+#define SPROP_IS_LIVE(sprop) ((sprop) > SPROP_REMOVED)
+#define SPROP_FLAG_COLLISION(spp, sprop)                                       \
+    (*(spp) = (JSScopeProperty *)((jsuword)(sprop) | SPROP_COLLISION))
+#define SPROP_HAD_COLLISION(sprop) ((jsuword)(sprop)&SPROP_COLLISION)
+#define SPROP_FETCH(spp) SPROP_CLEAR_COLLISION(*(spp))
 
-#define SPROP_CLEAR_COLLISION(sprop)                                          \
-    ((JSScopeProperty *) ((jsuword)(sprop) & ~SPROP_COLLISION))
+#define SPROP_CLEAR_COLLISION(sprop)                                           \
+    ((JSScopeProperty *)((jsuword)(sprop) & ~SPROP_COLLISION))
 
-#define SPROP_STORE_PRESERVING_COLLISION(spp, sprop)                          \
-    (*(spp) = (JSScopeProperty *) ((jsuword)(sprop)                           \
-                                   | SPROP_HAD_COLLISION(*(spp))))
+#define SPROP_STORE_PRESERVING_COLLISION(spp, sprop)                           \
+    (*(spp) =                                                                  \
+         (JSScopeProperty *)((jsuword)(sprop) | SPROP_HAD_COLLISION(*(spp))))
 
 /* Bits stored in sprop->flags. */
-#define SPROP_MARK                      0x01
-#define SPROP_IS_DUPLICATE              0x02
-#define SPROP_IS_ALIAS                  0x04
-#define SPROP_HAS_SHORTID               0x08
-#define SPROP_IS_HIDDEN                 0x10    /* a normally-hidden property,
-                                                   e.g., function arg or var */
+#define SPROP_MARK 0x01
+#define SPROP_IS_DUPLICATE 0x02
+#define SPROP_IS_ALIAS 0x04
+#define SPROP_HAS_SHORTID 0x08
+#define SPROP_IS_HIDDEN                                                        \
+    0x10 /* a normally-hidden property,                                        \
+            e.g., function arg or var */
 
 /*
  * If SPROP_HAS_SHORTID is set in sprop->flags, we use sprop->shortid rather
  * than id when calling sprop's getter or setter.
  */
-#define SPROP_USERID(sprop)                                                   \
-    (((sprop)->flags & SPROP_HAS_SHORTID) ? INT_TO_JSVAL((sprop)->shortid)    \
+#define SPROP_USERID(sprop)                                                    \
+    (((sprop)->flags & SPROP_HAS_SHORTID) ? INT_TO_JSVAL((sprop)->shortid)     \
                                           : ID_TO_VALUE((sprop)->id))
 
-#define SPROP_INVALID_SLOT              0xffffffff
+#define SPROP_INVALID_SLOT 0xffffffff
 
-#define SLOT_IN_SCOPE(slot,scope)         ((slot) < (scope)->map.freeslot)
-#define SPROP_HAS_VALID_SLOT(sprop,scope) SLOT_IN_SCOPE((sprop)->slot, scope)
+#define SLOT_IN_SCOPE(slot, scope) ((slot) < (scope)->map.freeslot)
+#define SPROP_HAS_VALID_SLOT(sprop, scope) SLOT_IN_SCOPE((sprop)->slot, scope)
 
-#define SPROP_HAS_STUB_GETTER(sprop)    (!(sprop)->getter)
-#define SPROP_HAS_STUB_SETTER(sprop)    (!(sprop)->setter)
+#define SPROP_HAS_STUB_GETTER(sprop) (!(sprop)->getter)
+#define SPROP_HAS_STUB_SETTER(sprop) (!(sprop)->setter)
 
 /*
  * NB: SPROP_GET must not be called if SPROP_HAS_STUB_GETTER(sprop).
  */
-#define SPROP_GET(cx,sprop,obj,obj2,vp)                                       \
-    (((sprop)->attrs & JSPROP_GETTER)                                         \
-     ? js_InternalGetOrSet(cx, obj, (sprop)->id,                              \
-                           OBJECT_TO_JSVAL((sprop)->getter), JSACC_READ,      \
-                           0, 0, vp)                                          \
-     : (sprop)->getter(cx, OBJ_THIS_OBJECT(cx,obj), SPROP_USERID(sprop), vp))
+#define SPROP_GET(cx, sprop, obj, obj2, vp)                                    \
+    (((sprop)->attrs & JSPROP_GETTER)                                          \
+         ? js_InternalGetOrSet(cx, obj, (sprop)->id,                           \
+                               OBJECT_TO_JSVAL((sprop)->getter), JSACC_READ,   \
+                               0, 0, vp)                                       \
+         : (sprop)->getter(cx, OBJ_THIS_OBJECT(cx, obj), SPROP_USERID(sprop),  \
+                           vp))
 
 /*
  * NB: SPROP_SET must not be called if (SPROP_HAS_STUB_SETTER(sprop) &&
  * !(sprop->attrs & JSPROP_GETTER)).
  */
-#define SPROP_SET(cx,sprop,obj,obj2,vp)                                       \
-    (((sprop)->attrs & JSPROP_SETTER)                                         \
-     ? js_InternalGetOrSet(cx, obj, (sprop)->id,                              \
-                           OBJECT_TO_JSVAL((sprop)->setter), JSACC_WRITE,     \
-                           1, vp, vp)                                         \
-     : ((sprop)->attrs & JSPROP_GETTER)                                       \
-     ? (JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,                    \
-                             JSMSG_GETTER_ONLY, NULL), JS_FALSE)              \
-     : (sprop)->setter(cx, OBJ_THIS_OBJECT(cx,obj), SPROP_USERID(sprop), vp))
+#define SPROP_SET(cx, sprop, obj, obj2, vp)                                    \
+    (((sprop)->attrs & JSPROP_SETTER)                                          \
+         ? js_InternalGetOrSet(cx, obj, (sprop)->id,                           \
+                               OBJECT_TO_JSVAL((sprop)->setter), JSACC_WRITE,  \
+                               1, vp, vp)                                      \
+     : ((sprop)->attrs & JSPROP_GETTER)                                        \
+         ? (JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,                 \
+                                 JSMSG_GETTER_ONLY, NULL),                     \
+            JS_FALSE)                                                          \
+         : (sprop)->setter(cx, OBJ_THIS_OBJECT(cx, obj), SPROP_USERID(sprop),  \
+                           vp))
 
 /* Macro for common expression to test for shared permanent attributes. */
-#define SPROP_IS_SHARED_PERMANENT(sprop)                                      \
+#define SPROP_IS_SHARED_PERMANENT(sprop)                                       \
     ((~(sprop)->attrs & (JSPROP_SHARED | JSPROP_PERMANENT)) == 0)
 
-extern JSScope *
-js_GetMutableScope(JSContext *cx, JSObject *obj);
+extern JSScope *js_GetMutableScope(JSContext *cx, JSObject *obj);
 
-extern JSScope *
-js_NewScope(JSContext *cx, jsrefcount nrefs, JSObjectOps *ops, JSClass *clasp,
-            JSObject *obj);
+extern JSScope *js_NewScope(JSContext *cx, jsrefcount nrefs, JSObjectOps *ops,
+                            JSClass *clasp, JSObject *obj);
 
-extern void
-js_DestroyScope(JSContext *cx, JSScope *scope);
+extern void js_DestroyScope(JSContext *cx, JSScope *scope);
 
-#define ID_TO_VALUE(id) (JSID_IS_ATOM(id) ? ATOM_JSID_TO_JSVAL(id) :          \
-                         JSID_IS_OBJECT(id) ? OBJECT_JSID_TO_JSVAL(id) :      \
-                         (jsval)(id))
-#define HASH_ID(id)     (JSID_IS_ATOM(id) ? JSID_TO_ATOM(id)->number :        \
-                         JSID_IS_OBJECT(id) ? (jsatomid) JSID_CLRTAG(id) :    \
-                         (jsatomid) JSID_TO_INT(id))
+#define ID_TO_VALUE(id)                                                        \
+    (JSID_IS_ATOM(id)     ? ATOM_JSID_TO_JSVAL(id)                             \
+     : JSID_IS_OBJECT(id) ? OBJECT_JSID_TO_JSVAL(id)                           \
+                          : (jsval)(id))
+#define HASH_ID(id)                                                            \
+    (JSID_IS_ATOM(id)     ? JSID_TO_ATOM(id)->number                           \
+     : JSID_IS_OBJECT(id) ? (jsatomid)JSID_CLRTAG(id)                          \
+                          : (jsatomid)JSID_TO_INT(id))
 
 extern JS_FRIEND_API(JSScopeProperty **)
-js_SearchScope(JSScope *scope, jsid id, JSBool adding);
+    js_SearchScope(JSScope *scope, jsid id, JSBool adding);
 
-#define SCOPE_GET_PROPERTY(scope, id)                                         \
+#define SCOPE_GET_PROPERTY(scope, id)                                          \
     SPROP_FETCH(js_SearchScope(scope, id, JS_FALSE))
 
-#define SCOPE_HAS_PROPERTY(scope, sprop)                                      \
+#define SCOPE_HAS_PROPERTY(scope, sprop)                                       \
     (SCOPE_GET_PROPERTY(scope, (sprop)->id) == (sprop))
 
-extern JSScopeProperty *
-js_AddScopeProperty(JSContext *cx, JSScope *scope, jsid id,
-                    JSPropertyOp getter, JSPropertyOp setter, uint32 slot,
-                    uintN attrs, uintN flags, intN shortid);
+extern JSScopeProperty *js_AddScopeProperty(JSContext *cx, JSScope *scope,
+                                            jsid id, JSPropertyOp getter,
+                                            JSPropertyOp setter, uint32 slot,
+                                            uintN attrs, uintN flags,
+                                            intN shortid);
 
 extern JSScopeProperty *
 js_ChangeScopePropertyAttrs(JSContext *cx, JSScope *scope,
                             JSScopeProperty *sprop, uintN attrs, uintN mask,
                             JSPropertyOp getter, JSPropertyOp setter);
 
-extern JSBool
-js_RemoveScopeProperty(JSContext *cx, JSScope *scope, jsid id);
+extern JSBool js_RemoveScopeProperty(JSContext *cx, JSScope *scope, jsid id);
 
-extern void
-js_ClearScope(JSContext *cx, JSScope *scope);
+extern void js_ClearScope(JSContext *cx, JSScope *scope);
 
 /*
  * These macros used to inline short code sequences, but they grew over time.
  * We retain them for internal backward compatibility, and in case one or both
  * ever shrink to inline-able size.
  */
-#define MARK_ID(cx,id)                js_MarkId(cx, id)
-#define MARK_SCOPE_PROPERTY(cx,sprop) js_MarkScopeProperty(cx, sprop)
+#define MARK_ID(cx, id) js_MarkId(cx, id)
+#define MARK_SCOPE_PROPERTY(cx, sprop) js_MarkScopeProperty(cx, sprop)
 
-extern void
-js_MarkId(JSContext *cx, jsid id);
+extern void js_MarkId(JSContext *cx, jsid id);
 
-extern void
-js_MarkScopeProperty(JSContext *cx, JSScopeProperty *sprop);
+extern void js_MarkScopeProperty(JSContext *cx, JSScopeProperty *sprop);
 
-extern void
-js_SweepScopeProperties(JSRuntime *rt);
+extern void js_SweepScopeProperties(JSRuntime *rt);
 
-extern JSBool
-js_InitPropertyTree(JSRuntime *rt);
+extern JSBool js_InitPropertyTree(JSRuntime *rt);
 
-extern void
-js_FinishPropertyTree(JSRuntime *rt);
+extern void js_FinishPropertyTree(JSRuntime *rt);
 
 #endif /* jsscope_h___ */

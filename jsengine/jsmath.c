@@ -40,69 +40,71 @@
 /*
  * JS math package.
  */
-#include "jsstddef.h"
-#include "jslibmath.h"
-#include <stdlib.h>
-#include "jstypes.h"
-#include "jslong.h"
-#include "prmjtime.h"
+#include "jsmath.h"
 #include "jsapi.h"
 #include "jsatom.h"
 #include "jscntxt.h"
 #include "jsconfig.h"
+#include "jslibmath.h"
 #include "jslock.h"
-#include "jsmath.h"
+#include "jslong.h"
 #include "jsnum.h"
 #include "jsobj.h"
+#include "jsstddef.h"
+#include "jstypes.h"
+#include "prmjtime.h"
+#include <stdlib.h>
 
 #ifndef M_E
-#define M_E             2.7182818284590452354
+#define M_E 2.7182818284590452354
 #endif
 #ifndef M_LOG2E
-#define M_LOG2E         1.4426950408889634074
+#define M_LOG2E 1.4426950408889634074
 #endif
 #ifndef M_LOG10E
-#define M_LOG10E        0.43429448190325182765
+#define M_LOG10E 0.43429448190325182765
 #endif
 #ifndef M_LN2
-#define M_LN2           0.69314718055994530942
+#define M_LN2 0.69314718055994530942
 #endif
 #ifndef M_LN10
-#define M_LN10          2.30258509299404568402
+#define M_LN10 2.30258509299404568402
 #endif
 #ifndef M_PI
-#define M_PI            3.14159265358979323846
+#define M_PI 3.14159265358979323846
 #endif
 #ifndef M_SQRT2
-#define M_SQRT2         1.41421356237309504880
+#define M_SQRT2 1.41421356237309504880
 #endif
 #ifndef M_SQRT1_2
-#define M_SQRT1_2       0.70710678118654752440
+#define M_SQRT1_2 0.70710678118654752440
 #endif
 
 static JSConstDoubleSpec math_constants[] = {
-    {M_E,       "E",            0, {0,0,0}},
-    {M_LOG2E,   "LOG2E",        0, {0,0,0}},
-    {M_LOG10E,  "LOG10E",       0, {0,0,0}},
-    {M_LN2,     "LN2",          0, {0,0,0}},
-    {M_LN10,    "LN10",         0, {0,0,0}},
-    {M_PI,      "PI",           0, {0,0,0}},
-    {M_SQRT2,   "SQRT2",        0, {0,0,0}},
-    {M_SQRT1_2, "SQRT1_2",      0, {0,0,0}},
-    {0,0,0,{0,0,0}}
-};
+    {M_E, "E", 0, {0, 0, 0}},
+    {M_LOG2E, "LOG2E", 0, {0, 0, 0}},
+    {M_LOG10E, "LOG10E", 0, {0, 0, 0}},
+    {M_LN2, "LN2", 0, {0, 0, 0}},
+    {M_LN10, "LN10", 0, {0, 0, 0}},
+    {M_PI, "PI", 0, {0, 0, 0}},
+    {M_SQRT2, "SQRT2", 0, {0, 0, 0}},
+    {M_SQRT1_2, "SQRT1_2", 0, {0, 0, 0}},
+    {0, 0, 0, {0, 0, 0}}};
 
-JSClass js_MathClass = {
-    js_Math_str,
-    JSCLASS_HAS_CACHED_PROTO(JSProto_Math),
-    JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
-    JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   JS_FinalizeStub,
-    JSCLASS_NO_OPTIONAL_MEMBERS
-};
+JSClass js_MathClass = {js_Math_str,
+                        JSCLASS_HAS_CACHED_PROTO(JSProto_Math),
+                        JS_PropertyStub,
+                        JS_PropertyStub,
+                        JS_PropertyStub,
+                        JS_PropertyStub,
+                        JS_EnumerateStub,
+                        JS_ResolveStub,
+                        JS_ConvertStub,
+                        JS_FinalizeStub,
+                        JSCLASS_NO_OPTIONAL_MEMBERS};
 
-static JSBool
-math_abs(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
+static JSBool math_abs(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
+                       jsval *rval) {
     jsdouble x, z;
 
     if (!js_ValueToNumber(cx, argv[0], &x))
@@ -111,9 +113,8 @@ math_abs(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     return js_NewNumberValue(cx, z, rval);
 }
 
-static JSBool
-math_acos(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
+static JSBool math_acos(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
+                        jsval *rval) {
     jsdouble x, z;
 
     if (!js_ValueToNumber(cx, argv[0], &x))
@@ -122,9 +123,8 @@ math_acos(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     return js_NewNumberValue(cx, z, rval);
 }
 
-static JSBool
-math_asin(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
+static JSBool math_asin(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
+                        jsval *rval) {
     jsdouble x, z;
 
     if (!js_ValueToNumber(cx, argv[0], &x))
@@ -133,9 +133,8 @@ math_asin(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     return js_NewNumberValue(cx, z, rval);
 }
 
-static JSBool
-math_atan(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
+static JSBool math_atan(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
+                        jsval *rval) {
     jsdouble x, z;
 
     if (!js_ValueToNumber(cx, argv[0], &x))
@@ -144,9 +143,8 @@ math_atan(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     return js_NewNumberValue(cx, z, rval);
 }
 
-static JSBool
-math_atan2(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
+static JSBool math_atan2(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
+                         jsval *rval) {
     jsdouble x, y, z;
 
     if (!js_ValueToNumber(cx, argv[0], &x))
@@ -172,9 +170,8 @@ math_atan2(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     return js_NewNumberValue(cx, z, rval);
 }
 
-static JSBool
-math_ceil(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
+static JSBool math_ceil(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
+                        jsval *rval) {
     jsdouble x, z;
 
     if (!js_ValueToNumber(cx, argv[0], &x))
@@ -183,9 +180,8 @@ math_ceil(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     return js_NewNumberValue(cx, z, rval);
 }
 
-static JSBool
-math_cos(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
+static JSBool math_cos(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
+                       jsval *rval) {
     jsdouble x, z;
 
     if (!js_ValueToNumber(cx, argv[0], &x))
@@ -194,9 +190,8 @@ math_cos(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     return js_NewNumberValue(cx, z, rval);
 }
 
-static JSBool
-math_exp(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
+static JSBool math_exp(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
+                       jsval *rval) {
     jsdouble x, z;
 
     if (!js_ValueToNumber(cx, argv[0], &x))
@@ -217,9 +212,8 @@ math_exp(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     return js_NewNumberValue(cx, z, rval);
 }
 
-static JSBool
-math_floor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
+static JSBool math_floor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
+                         jsval *rval) {
     jsdouble x, z;
 
     if (!js_ValueToNumber(cx, argv[0], &x))
@@ -228,9 +222,8 @@ math_floor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     return js_NewNumberValue(cx, z, rval);
 }
 
-static JSBool
-math_log(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
+static JSBool math_log(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
+                       jsval *rval) {
     jsdouble x, z;
 
     if (!js_ValueToNumber(cx, argv[0], &x))
@@ -239,9 +232,8 @@ math_log(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     return js_NewNumberValue(cx, z, rval);
 }
 
-static JSBool
-math_max(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
+static JSBool math_max(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
+                       jsval *rval) {
     jsdouble x, z = *cx->runtime->jsNegativeInfinity;
     uintN i;
 
@@ -264,9 +256,8 @@ math_max(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     return js_NewNumberValue(cx, z, rval);
 }
 
-static JSBool
-math_min(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
+static JSBool math_min(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
+                       jsval *rval) {
     jsdouble x, z = *cx->runtime->jsPositiveInfinity;
     uintN i;
 
@@ -281,7 +272,7 @@ math_min(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
             *rval = DOUBLE_TO_JSVAL(cx->runtime->jsNaN);
             return JS_TRUE;
         }
-        if (x == 0 && x == z && fd_copysign(1.0,x) == -1)
+        if (x == 0 && x == z && fd_copysign(1.0, x) == -1)
             z = x;
         else
             z = (x < z) ? x : z;
@@ -289,9 +280,8 @@ math_min(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     return js_NewNumberValue(cx, z, rval);
 }
 
-static JSBool
-math_pow(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
+static JSBool math_pow(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
+                       jsval *rval) {
     jsdouble x, y, z;
 
     if (!js_ValueToNumber(cx, argv[0], &x))
@@ -320,9 +310,7 @@ math_pow(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 /*
  * Math.random() support, lifted from java.util.Random.java.
  */
-static void
-random_setSeed(JSRuntime *rt, int64 seed)
-{
+static void random_setSeed(JSRuntime *rt, int64 seed) {
     int64 tmp;
 
     JSLL_I2L(tmp, 1000);
@@ -331,9 +319,7 @@ random_setSeed(JSRuntime *rt, int64 seed)
     JSLL_AND(rt->rngSeed, tmp, rt->rngMask);
 }
 
-static void
-random_init(JSRuntime *rt)
-{
+static void random_init(JSRuntime *rt) {
     int64 tmp, tmp2;
 
     /* Do at most once. */
@@ -362,9 +348,7 @@ random_init(JSRuntime *rt)
     random_setSeed(rt, PRMJ_Now());
 }
 
-static uint32
-random_next(JSRuntime *rt, int bits)
-{
+static uint32 random_next(JSRuntime *rt, int bits) {
     int64 nextseed, tmp;
     uint32 retval;
 
@@ -377,9 +361,7 @@ random_next(JSRuntime *rt, int bits)
     return retval;
 }
 
-static jsdouble
-random_nextDouble(JSRuntime *rt)
-{
+static jsdouble random_nextDouble(JSRuntime *rt) {
     int64 tmp, tmp2;
     jsdouble d;
 
@@ -390,9 +372,8 @@ random_nextDouble(JSRuntime *rt)
     return d / rt->rngDscale;
 }
 
-static JSBool
-math_random(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
+static JSBool math_random(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
+                          jsval *rval) {
     JSRuntime *rt;
     jsdouble z;
 
@@ -406,9 +387,7 @@ math_random(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
 #if defined _WIN32 && !defined WINCE && _MSC_VER < 1400
 /* Try to work around apparent _copysign bustage in VC6 and VC7. */
-double
-js_copysign(double x, double y)
-{
+double js_copysign(double x, double y) {
     jsdpun xu, yu;
 
     xu.d = x;
@@ -419,9 +398,8 @@ js_copysign(double x, double y)
 }
 #endif
 
-static JSBool
-math_round(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
+static JSBool math_round(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
+                         jsval *rval) {
     jsdouble x, z;
 
     if (!js_ValueToNumber(cx, argv[0], &x))
@@ -430,9 +408,8 @@ math_round(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     return js_NewNumberValue(cx, z, rval);
 }
 
-static JSBool
-math_sin(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
+static JSBool math_sin(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
+                       jsval *rval) {
     jsdouble x, z;
 
     if (!js_ValueToNumber(cx, argv[0], &x))
@@ -441,9 +418,8 @@ math_sin(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     return js_NewNumberValue(cx, z, rval);
 }
 
-static JSBool
-math_sqrt(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
+static JSBool math_sqrt(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
+                        jsval *rval) {
     jsdouble x, z;
 
     if (!js_ValueToNumber(cx, argv[0], &x))
@@ -452,9 +428,8 @@ math_sqrt(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     return js_NewNumberValue(cx, z, rval);
 }
 
-static JSBool
-math_tan(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
+static JSBool math_tan(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
+                       jsval *rval) {
     jsdouble x, z;
 
     if (!js_ValueToNumber(cx, argv[0], &x))
@@ -464,10 +439,8 @@ math_tan(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 }
 
 #if JS_HAS_TOSOURCE
-static JSBool
-math_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
-              jsval *rval)
-{
+static JSBool math_toSource(JSContext *cx, JSObject *obj, uintN argc,
+                            jsval *argv, jsval *rval) {
     *rval = ATOM_KEY(CLASS_ATOM(cx, Math));
     return JS_TRUE;
 }
@@ -475,32 +448,29 @@ math_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
 static JSFunctionSpec math_static_methods[] = {
 #if JS_HAS_TOSOURCE
-    {js_toSource_str,   math_toSource,          0, 0, 0},
+    {js_toSource_str, math_toSource, 0, 0, 0},
 #endif
-    {"abs",             math_abs,               1, 0, 0},
-    {"acos",            math_acos,              1, 0, 0},
-    {"asin",            math_asin,              1, 0, 0},
-    {"atan",            math_atan,              1, 0, 0},
-    {"atan2",           math_atan2,             2, 0, 0},
-    {"ceil",            math_ceil,              1, 0, 0},
-    {"cos",             math_cos,               1, 0, 0},
-    {"exp",             math_exp,               1, 0, 0},
-    {"floor",           math_floor,             1, 0, 0},
-    {"log",             math_log,               1, 0, 0},
-    {"max",             math_max,               2, 0, 0},
-    {"min",             math_min,               2, 0, 0},
-    {"pow",             math_pow,               2, 0, 0},
-    {"random",          math_random,            0, 0, 0},
-    {"round",           math_round,             1, 0, 0},
-    {"sin",             math_sin,               1, 0, 0},
-    {"sqrt",            math_sqrt,              1, 0, 0},
-    {"tan",             math_tan,               1, 0, 0},
-    {0,0,0,0,0}
-};
+    {"abs", math_abs, 1, 0, 0},
+    {"acos", math_acos, 1, 0, 0},
+    {"asin", math_asin, 1, 0, 0},
+    {"atan", math_atan, 1, 0, 0},
+    {"atan2", math_atan2, 2, 0, 0},
+    {"ceil", math_ceil, 1, 0, 0},
+    {"cos", math_cos, 1, 0, 0},
+    {"exp", math_exp, 1, 0, 0},
+    {"floor", math_floor, 1, 0, 0},
+    {"log", math_log, 1, 0, 0},
+    {"max", math_max, 2, 0, 0},
+    {"min", math_min, 2, 0, 0},
+    {"pow", math_pow, 2, 0, 0},
+    {"random", math_random, 0, 0, 0},
+    {"round", math_round, 1, 0, 0},
+    {"sin", math_sin, 1, 0, 0},
+    {"sqrt", math_sqrt, 1, 0, 0},
+    {"tan", math_tan, 1, 0, 0},
+    {0, 0, 0, 0, 0}};
 
-JSObject *
-js_InitMathClass(JSContext *cx, JSObject *obj)
-{
+JSObject *js_InitMathClass(JSContext *cx, JSObject *obj) {
     JSObject *Math;
 
     Math = JS_DefineObject(cx, obj, js_Math_str, &js_MathClass, NULL, 0);

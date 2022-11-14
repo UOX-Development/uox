@@ -36,7 +36,8 @@
  * ***** END LICENSE BLOCK ***** */
 
 /* -*- Mode: C; tab-width: 8 -*-
- * Copyright (C) 1996-1999 Netscape Communications Corporation, All Rights Reserved.
+ * Copyright (C) 1996-1999 Netscape Communications Corporation, All Rights
+ * Reserved.
  */
 #ifndef jscompat_h___
 #define jscompat_h___
@@ -45,8 +46,8 @@
  * int16, jsword, and so on to minimize differences with js/ref, no matter what
  * the NSPR typedef names may be.
  */
-#include "jstypes.h"
 #include "jslong.h"
+#include "jstypes.h"
 
 typedef JSIntn intN;
 typedef JSUintn uintN;

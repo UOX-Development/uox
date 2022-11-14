@@ -41,17 +41,10 @@
 /*
  * JS execution context.
  */
-#include "jsstddef.h"
-#include <stdarg.h>
-#include <stdlib.h>
-#include <string.h>
-#include "jstypes.h"
-#include "jsarena.h" /* Added by JSIFY */
-#include "jsutil.h" /* Added by JSIFY */
-#include "jsclist.h"
-#include "jsprf.h"
-#include "jsatom.h"
 #include "jscntxt.h"
+#include "jsarena.h" /* Added by JSIFY */
+#include "jsatom.h"
+#include "jsclist.h"
 #include "jsconfig.h"
 #include "jsdbgapi.h"
 #include "jsexn.h"
@@ -60,10 +53,17 @@
 #include "jsnum.h"
 #include "jsobj.h"
 #include "jsopcode.h"
+#include "jsprf.h"
 #include "jsscan.h"
 #include "jsscope.h"
 #include "jsscript.h"
+#include "jsstddef.h"
 #include "jsstr.h"
+#include "jstypes.h"
+#include "jsutil.h" /* Added by JSIFY */
+#include <stdarg.h>
+#include <stdlib.h>
+#include <string.h>
 
 #ifdef JS_THREADSAFE
 
@@ -71,9 +71,7 @@
  * Callback function to delete a JSThread info when the thread that owns it
  * is destroyed.
  */
-void JS_DLL_CALLBACK
-js_ThreadDestructorCB(void *ptr)
-{
+void JS_DLL_CALLBACK js_ThreadDestructorCB(void *ptr) {
     JSThread *thread = (JSThread *)ptr;
 
     if (!thread)
@@ -99,14 +97,12 @@ js_ThreadDestructorCB(void *ptr)
  * likely; both are probably due to out-of-memory).  It is up to the caller
  * to report an error, if possible.
  */
-JSThread *
-js_GetCurrentThread(JSRuntime *rt)
-{
+JSThread *js_GetCurrentThread(JSRuntime *rt) {
     JSThread *thread;
 
     thread = (JSThread *)PR_GetThreadPrivate(rt->threadTPIndex);
     if (!thread) {
-        thread = (JSThread *) calloc(1, sizeof(JSThread));
+        thread = (JSThread *)calloc(1, sizeof(JSThread));
         if (!thread)
             return NULL;
 
@@ -132,9 +128,7 @@ js_GetCurrentThread(JSRuntime *rt)
  * thread-private info to the context. If the current thread doesn't have
  * private JSThread info, create one.
  */
-JSBool
-js_SetContextThread(JSContext *cx)
-{
+JSBool js_SetContextThread(JSContext *cx) {
     JSThread *thread = js_GetCurrentThread(cx->runtime);
 
     if (!thread) {
@@ -156,9 +150,7 @@ js_SetContextThread(JSContext *cx)
 }
 
 /* Remove the owning thread info of a context. */
-void
-js_ClearContextThread(JSContext *cx)
-{
+void js_ClearContextThread(JSContext *cx) {
     JS_REMOVE_AND_INIT_LINK(&cx->threadLinks);
 #ifdef DEBUG
     if (JS_CLIST_IS_EMPTY(&cx->thread->contextList)) {
@@ -171,9 +163,7 @@ js_ClearContextThread(JSContext *cx)
 
 #endif /* JS_THREADSAFE */
 
-void
-js_OnVersionChange(JSContext *cx)
-{
+void js_OnVersionChange(JSContext *cx) {
 #ifdef DEBUG
     JSVersion version = JSVERSION_NUMBER(cx);
 
@@ -181,21 +171,17 @@ js_OnVersionChange(JSContext *cx)
 #endif
 }
 
-void
-js_SetVersion(JSContext *cx, JSVersion version)
-{
+void js_SetVersion(JSContext *cx, JSVersion version) {
     cx->version = version;
     js_OnVersionChange(cx);
 }
 
-JSContext *
-js_NewContext(JSRuntime *rt, size_t stackChunkSize)
-{
+JSContext *js_NewContext(JSRuntime *rt, size_t stackChunkSize) {
     JSContext *cx;
     JSBool ok, first;
     JSContextCallback cxCallback;
 
-    cx = (JSContext *) malloc(sizeof *cx);
+    cx = (JSContext *)malloc(sizeof *cx);
     if (!cx)
         return NULL;
     memset(cx, 0, sizeof *cx);
@@ -264,8 +250,8 @@ js_NewContext(JSRuntime *rt, size_t stackChunkSize)
          * by the scanner.
          */
         ok = (rt->atomState.liveAtoms == 0)
-             ? js_InitAtomState(cx, &rt->atomState)
-             : js_InitPinnedAtoms(cx, &rt->atomState);
+                 ? js_InitAtomState(cx, &rt->atomState)
+                 : js_InitPinnedAtoms(cx, &rt->atomState);
         if (ok && !rt->scriptFilenameTable)
             ok = js_InitRuntimeScriptState(rt);
         if (ok)
@@ -294,9 +280,7 @@ js_NewContext(JSRuntime *rt, size_t stackChunkSize)
     return cx;
 }
 
-void
-js_DestroyContext(JSContext *cx, JSDestroyContextMode mode)
-{
+void js_DestroyContext(JSContext *cx, JSDestroyContextMode mode) {
     JSRuntime *rt;
     JSContextCallback cxCallback;
     JSBool last;
@@ -316,7 +300,7 @@ js_DestroyContext(JSContext *cx, JSDestroyContextMode mode)
 #ifdef DEBUG
             JSBool callbackStatus =
 #endif
-            cxCallback(cx, JSCONTEXT_DESTROY);
+                cxCallback(cx, JSCONTEXT_DESTROY);
             JS_ASSERT(callbackStatus);
         }
     }
@@ -449,9 +433,7 @@ js_DestroyContext(JSContext *cx, JSDestroyContextMode mode)
     free(cx);
 }
 
-JSBool
-js_ValidContextPointer(JSRuntime *rt, JSContext *cx)
-{
+JSBool js_ValidContextPointer(JSRuntime *rt, JSContext *cx) {
     JSCList *cl;
 
     for (cl = rt->contextList.next; cl != &rt->contextList; cl = cl->next) {
@@ -462,9 +444,8 @@ js_ValidContextPointer(JSRuntime *rt, JSContext *cx)
     return JS_FALSE;
 }
 
-JSContext *
-js_ContextIterator(JSRuntime *rt, JSBool unlocked, JSContext **iterp)
-{
+JSContext *js_ContextIterator(JSRuntime *rt, JSBool unlocked,
+                              JSContext **iterp) {
     JSContext *cx = *iterp;
 
     if (unlocked)
@@ -481,26 +462,23 @@ js_ContextIterator(JSRuntime *rt, JSBool unlocked, JSContext **iterp)
 }
 
 JS_STATIC_DLL_CALLBACK(const void *)
-resolving_GetKey(JSDHashTable *table, JSDHashEntryHdr *hdr)
-{
+resolving_GetKey(JSDHashTable *table, JSDHashEntryHdr *hdr) {
     JSResolvingEntry *entry = (JSResolvingEntry *)hdr;
 
     return &entry->key;
 }
 
 JS_STATIC_DLL_CALLBACK(JSDHashNumber)
-resolving_HashKey(JSDHashTable *table, const void *ptr)
-{
+resolving_HashKey(JSDHashTable *table, const void *ptr) {
     const JSResolvingKey *key = (const JSResolvingKey *)ptr;
 
-    return ((JSDHashNumber)JS_PTR_TO_UINT32(key->obj) >> JSVAL_TAGBITS) ^ key->id;
+    return ((JSDHashNumber)JS_PTR_TO_UINT32(key->obj) >> JSVAL_TAGBITS) ^
+           key->id;
 }
 
 JS_PUBLIC_API(JSBool)
-resolving_MatchEntry(JSDHashTable *table,
-                     const JSDHashEntryHdr *hdr,
-                     const void *ptr)
-{
+resolving_MatchEntry(JSDHashTable *table, const JSDHashEntryHdr *hdr,
+                     const void *ptr) {
     const JSResolvingEntry *entry = (const JSResolvingEntry *)hdr;
     const JSResolvingKey *key = (const JSResolvingKey *)ptr;
 
@@ -508,36 +486,25 @@ resolving_MatchEntry(JSDHashTable *table,
 }
 
 static const JSDHashTableOps resolving_dhash_ops = {
-    JS_DHashAllocTable,
-    JS_DHashFreeTable,
-    resolving_GetKey,
-    resolving_HashKey,
-    resolving_MatchEntry,
-    JS_DHashMoveEntryStub,
-    JS_DHashClearEntryStub,
-    JS_DHashFinalizeStub,
-    NULL
-};
+    JS_DHashAllocTable,     JS_DHashFreeTable,    resolving_GetKey,
+    resolving_HashKey,      resolving_MatchEntry, JS_DHashMoveEntryStub,
+    JS_DHashClearEntryStub, JS_DHashFinalizeStub, NULL};
 
-JSBool
-js_StartResolving(JSContext *cx, JSResolvingKey *key, uint32 flag,
-                  JSResolvingEntry **entryp)
-{
+JSBool js_StartResolving(JSContext *cx, JSResolvingKey *key, uint32 flag,
+                         JSResolvingEntry **entryp) {
     JSDHashTable *table;
     JSResolvingEntry *entry;
 
     table = cx->resolvingTable;
     if (!table) {
         table = JS_NewDHashTable(&resolving_dhash_ops, NULL,
-                                 sizeof(JSResolvingEntry),
-                                 JS_DHASH_MIN_SIZE);
+                                 sizeof(JSResolvingEntry), JS_DHASH_MIN_SIZE);
         if (!table)
             goto outofmem;
         cx->resolvingTable = table;
     }
 
-    entry = (JSResolvingEntry *)
-            JS_DHashTableOperate(table, key, JS_DHASH_ADD);
+    entry = (JSResolvingEntry *)JS_DHashTableOperate(table, key, JS_DHASH_ADD);
     if (!entry)
         goto outofmem;
 
@@ -558,10 +525,8 @@ outofmem:
     return JS_FALSE;
 }
 
-void
-js_StopResolving(JSContext *cx, JSResolvingKey *key, uint32 flag,
-                 JSResolvingEntry *entry, uint32 generation)
-{
+void js_StopResolving(JSContext *cx, JSResolvingKey *key, uint32 flag,
+                      JSResolvingEntry *entry, uint32 generation) {
     JSDHashTable *table;
 
     /*
@@ -571,8 +536,8 @@ js_StopResolving(JSContext *cx, JSResolvingKey *key, uint32 flag,
      */
     table = cx->resolvingTable;
     if (!entry || table->generation != generation) {
-        entry = (JSResolvingEntry *)
-                JS_DHashTableOperate(table, key, JS_DHASH_LOOKUP);
+        entry = (JSResolvingEntry *)JS_DHashTableOperate(table, key,
+                                                         JS_DHASH_LOOKUP);
     }
     JS_ASSERT(JS_DHASH_ENTRY_IS_BUSY(&entry->hdr));
     entry->flags &= ~flag;
@@ -591,15 +556,13 @@ js_StopResolving(JSContext *cx, JSResolvingKey *key, uint32 flag,
         JS_DHashTableOperate(table, key, JS_DHASH_REMOVE);
 }
 
-JSBool
-js_EnterLocalRootScope(JSContext *cx)
-{
+JSBool js_EnterLocalRootScope(JSContext *cx) {
     JSLocalRootStack *lrs;
     int mark;
 
     lrs = cx->localRootStack;
     if (!lrs) {
-        lrs = (JSLocalRootStack *) JS_malloc(cx, sizeof *lrs);
+        lrs = (JSLocalRootStack *)JS_malloc(cx, sizeof *lrs);
         if (!lrs)
             return JS_FALSE;
         lrs->scopeMark = JSLRS_NULL_MARK;
@@ -613,13 +576,11 @@ js_EnterLocalRootScope(JSContext *cx)
     mark = js_PushLocalRoot(cx, lrs, INT_TO_JSVAL(lrs->scopeMark));
     if (mark < 0)
         return JS_FALSE;
-    lrs->scopeMark = (uint32) mark;
+    lrs->scopeMark = (uint32)mark;
     return JS_TRUE;
 }
 
-void
-js_LeaveLocalRootScopeWithResult(JSContext *cx, jsval rval)
-{
+void js_LeaveLocalRootScopeWithResult(JSContext *cx, jsval rval) {
     JSLocalRootStack *lrs;
     uint32 mark, m, n;
     JSLocalRootChunk *lrc;
@@ -654,7 +615,7 @@ js_LeaveLocalRootScopeWithResult(JSContext *cx, jsval rval)
      */
     lrc = lrs->topChunk;
     m = mark & JSLRS_CHUNK_MASK;
-    lrs->scopeMark = (uint32) JSVAL_TO_INT(lrc->roots[m]);
+    lrs->scopeMark = (uint32)JSVAL_TO_INT(lrc->roots[m]);
     if (JSVAL_IS_GCTHING(rval) && !JSVAL_IS_NULL(rval)) {
         if (mark == 0) {
             cx->weakRoots.lastInternalResult = rval;
@@ -669,7 +630,7 @@ js_LeaveLocalRootScopeWithResult(JSContext *cx, jsval rval)
             ++mark;
         }
     }
-    lrs->rootCount = (uint32) mark;
+    lrs->rootCount = (uint32)mark;
 
     /*
      * Free the stack eagerly, risking malloc churn.  The alternative would
@@ -689,9 +650,7 @@ js_LeaveLocalRootScopeWithResult(JSContext *cx, jsval rval)
     }
 }
 
-void
-js_ForgetLocalRoot(JSContext *cx, jsval v)
-{
+void js_ForgetLocalRoot(JSContext *cx, jsval v) {
     JSLocalRootStack *lrs;
     uint32 i, j, m, n, mark;
     JSLocalRootChunk *lrc, *lrc2;
@@ -748,9 +707,7 @@ js_ForgetLocalRoot(JSContext *cx, jsval v)
     }
 }
 
-int
-js_PushLocalRoot(JSContext *cx, JSLocalRootStack *lrs, jsval v)
-{
+int js_PushLocalRoot(JSContext *cx, JSLocalRootStack *lrs, jsval v) {
     uint32 n, m;
     JSLocalRootChunk *lrc;
 
@@ -773,7 +730,7 @@ js_PushLocalRoot(JSContext *cx, JSLocalRootStack *lrs, jsval v)
          * After lrs->firstChunk, trying to index at a power-of-two chunk
          * boundary: need a new chunk.
          */
-        lrc = (JSLocalRootChunk *) JS_malloc(cx, sizeof *lrc);
+        lrc = (JSLocalRootChunk *)JS_malloc(cx, sizeof *lrc);
         if (!lrc)
             return -1;
         lrc->down = lrs->topChunk;
@@ -781,12 +738,10 @@ js_PushLocalRoot(JSContext *cx, JSLocalRootStack *lrs, jsval v)
     }
     lrs->rootCount = n + 1;
     lrc->roots[m] = v;
-    return (int) n;
+    return (int)n;
 }
 
-void
-js_MarkLocalRoots(JSContext *cx, JSLocalRootStack *lrs)
-{
+void js_MarkLocalRoots(JSContext *cx, JSLocalRootStack *lrs) {
     uint32 n, m, mark;
     JSLocalRootChunk *lrc;
 
@@ -816,9 +771,8 @@ js_MarkLocalRoots(JSContext *cx, JSLocalRootStack *lrs)
     JS_ASSERT(!lrc);
 }
 
-static void
-ReportError(JSContext *cx, const char *message, JSErrorReport *reportp)
-{
+static void ReportError(JSContext *cx, const char *message,
+                        JSErrorReport *reportp) {
     /*
      * Check the error report, and set a JavaScript-catchable exception
      * if the error is defined to have an associated exception.  If an
@@ -854,9 +808,7 @@ ReportError(JSContext *cx, const char *message, JSErrorReport *reportp)
  * Instead we just invoke the errorReporter with an "Out Of Memory"
  * type message, and then hope the process ends swiftly.
  */
-void
-js_ReportOutOfMemory(JSContext *cx)
-{
+void js_ReportOutOfMemory(JSContext *cx) {
     JSStackFrame *fp;
     JSErrorReport report;
     JSErrorReporter onError = cx->errorReporter;
@@ -867,7 +819,7 @@ js_ReportOutOfMemory(JSContext *cx)
     const char *msg = efs ? efs->format : "Out of memory";
 
     /* Fill out the report, but don't do anything that requires allocation. */
-    memset(&report, 0, sizeof (struct JSErrorReport));
+    memset(&report, 0, sizeof(struct JSErrorReport));
     report.flags = JSREPORT_ERROR;
     report.errorNumber = JSMSG_OUT_OF_MEMORY;
 
@@ -889,8 +841,7 @@ js_ReportOutOfMemory(JSContext *cx)
      */
     if (onError) {
         JSDebugErrorHook hook = cx->runtime->debugErrorHook;
-        if (hook &&
-            !hook(cx, msg, &report, cx->runtime->debugErrorHookData)) {
+        if (hook && !hook(cx, msg, &report, cx->runtime->debugErrorHookData)) {
             onError = NULL;
         }
     }
@@ -899,9 +850,8 @@ js_ReportOutOfMemory(JSContext *cx)
         onError(cx, msg, &report);
 }
 
-JSBool
-js_ReportErrorVA(JSContext *cx, uintN flags, const char *format, va_list ap)
-{
+JSBool js_ReportErrorVA(JSContext *cx, uintN flags, const char *format,
+                        va_list ap) {
     char *message;
     jschar *ucmessage;
     size_t messagelen;
@@ -917,7 +867,7 @@ js_ReportErrorVA(JSContext *cx, uintN flags, const char *format, va_list ap)
         return JS_FALSE;
     messagelen = strlen(message);
 
-    memset(&report, 0, sizeof (struct JSErrorReport));
+    memset(&report, 0, sizeof(struct JSErrorReport));
     report.flags = flags;
     report.errorNumber = JSMSG_USER_DEFINED_ERROR;
     report.ucmessage = ucmessage = js_InflateString(cx, message, &messagelen);
@@ -954,12 +904,10 @@ js_ReportErrorVA(JSContext *cx, uintN flags, const char *format, va_list ap)
  *
  * Returns true if the expansion succeeds (can fail if out of memory).
  */
-JSBool
-js_ExpandErrorArguments(JSContext *cx, JSErrorCallback callback,
-                        void *userRef, const uintN errorNumber,
-                        char **messagep, JSErrorReport *reportp,
-                        JSBool *warningp, JSBool charArgs, va_list ap)
-{
+JSBool js_ExpandErrorArguments(JSContext *cx, JSErrorCallback callback,
+                               void *userRef, const uintN errorNumber,
+                               char **messagep, JSErrorReport *reportp,
+                               JSBool *warningp, JSBool charArgs, va_list ap) {
     const JSErrorFormatString *efs;
     int i;
     int argCount;
@@ -989,8 +937,8 @@ js_ExpandErrorArguments(JSContext *cx, JSErrorCallback callback,
              * null it out to act as the caboose when we free the
              * pointers later.
              */
-            reportp->messageArgs = (const jschar **)
-                JS_malloc(cx, sizeof(jschar *) * (argCount + 1));
+            reportp->messageArgs = (const jschar **)JS_malloc(
+                cx, sizeof(jschar *) * (argCount + 1));
             if (!reportp->messageArgs)
                 return JS_FALSE;
             reportp->messageArgs[argCount] = NULL;
@@ -998,8 +946,8 @@ js_ExpandErrorArguments(JSContext *cx, JSErrorCallback callback,
                 if (charArgs) {
                     char *charArg = va_arg(ap, char *);
                     size_t charArgLength = strlen(charArg);
-                    reportp->messageArgs[i]
-                        = js_InflateString(cx, charArg, &charArgLength);
+                    reportp->messageArgs[i] =
+                        js_InflateString(cx, charArg, &charArgLength);
                     if (!reportp->messageArgs[i])
                         goto error;
                 } else {
@@ -1022,21 +970,20 @@ js_ExpandErrorArguments(JSContext *cx, JSErrorCallback callback,
                 size_t expandedLength;
                 size_t len = strlen(efs->format);
 
-                buffer = fmt = js_InflateString (cx, efs->format, &len);
+                buffer = fmt = js_InflateString(cx, efs->format, &len);
                 if (!buffer)
                     goto error;
-                expandedLength = len
-                                 - (3 * argCount)       /* exclude the {n} */
+                expandedLength = len - (3 * argCount) /* exclude the {n} */
                                  + totalArgsLength;
 
                 /*
-                * Note - the above calculation assumes that each argument
-                * is used once and only once in the expansion !!!
-                */
-                reportp->ucmessage = out = (jschar *)
-                    JS_malloc(cx, (expandedLength + 1) * sizeof(jschar));
+                 * Note - the above calculation assumes that each argument
+                 * is used once and only once in the expansion !!!
+                 */
+                reportp->ucmessage = out = (jschar *)JS_malloc(
+                    cx, (expandedLength + 1) * sizeof(jschar));
                 if (!out) {
-                    JS_free (cx, buffer);
+                    JS_free(cx, buffer);
                     goto error;
                 }
                 while (*fmt) {
@@ -1056,10 +1003,9 @@ js_ExpandErrorArguments(JSContext *cx, JSErrorCallback callback,
                 }
                 JS_ASSERT(expandedArgs == argCount);
                 *out = 0;
-                JS_free (cx, buffer);
-                *messagep =
-                    js_DeflateString(cx, reportp->ucmessage,
-                                     (size_t)(out - reportp->ucmessage));
+                JS_free(cx, buffer);
+                *messagep = js_DeflateString(
+                    cx, reportp->ucmessage, (size_t)(out - reportp->ucmessage));
                 if (!*messagep)
                     goto error;
             }
@@ -1082,8 +1028,8 @@ js_ExpandErrorArguments(JSContext *cx, JSErrorCallback callback,
     }
     if (*messagep == NULL) {
         /* where's the right place for this ??? */
-        const char *defaultErrorMessage
-            = "No error message available for error number %d";
+        const char *defaultErrorMessage =
+            "No error message available for error number %d";
         size_t nbytes = strlen(defaultErrorMessage) + 16;
         *messagep = (char *)JS_malloc(cx, nbytes);
         if (!*messagep)
@@ -1114,11 +1060,10 @@ error:
     return JS_FALSE;
 }
 
-JSBool
-js_ReportErrorNumberVA(JSContext *cx, uintN flags, JSErrorCallback callback,
-                       void *userRef, const uintN errorNumber,
-                       JSBool charArgs, va_list ap)
-{
+JSBool js_ReportErrorNumberVA(JSContext *cx, uintN flags,
+                              JSErrorCallback callback, void *userRef,
+                              const uintN errorNumber, JSBool charArgs,
+                              va_list ap) {
     JSStackFrame *fp;
     JSErrorReport report;
     char *message;
@@ -1127,7 +1072,7 @@ js_ReportErrorNumberVA(JSContext *cx, uintN flags, JSErrorCallback callback,
     if ((flags & JSREPORT_STRICT) && !JS_HAS_STRICT_OPTION(cx))
         return JS_TRUE;
 
-    memset(&report, 0, sizeof (struct JSErrorReport));
+    memset(&report, 0, sizeof(struct JSErrorReport));
     report.flags = flags;
     report.errorNumber = errorNumber;
 
@@ -1143,8 +1088,8 @@ js_ReportErrorNumberVA(JSContext *cx, uintN flags, JSErrorCallback callback,
         }
     }
 
-    if (!js_ExpandErrorArguments(cx, callback, userRef, errorNumber,
-                                 &message, &report, &warning, charArgs, ap)) {
+    if (!js_ExpandErrorArguments(cx, callback, userRef, errorNumber, &message,
+                                 &report, &warning, charArgs, ap)) {
         return JS_FALSE;
     }
 
@@ -1171,8 +1116,8 @@ js_ReportErrorNumberVA(JSContext *cx, uintN flags, JSErrorCallback callback,
 }
 
 JS_FRIEND_API(void)
-js_ReportErrorAgain(JSContext *cx, const char *message, JSErrorReport *reportp)
-{
+js_ReportErrorAgain(JSContext *cx, const char *message,
+                    JSErrorReport *reportp) {
     JSErrorReporter onError;
 
     if (!message)
@@ -1191,9 +1136,8 @@ js_ReportErrorAgain(JSContext *cx, const char *message, JSErrorReport *reportp)
      */
     if (onError) {
         JSDebugErrorHook hook = cx->runtime->debugErrorHook;
-        if (hook &&
-            !hook(cx, cx->lastMessage, reportp,
-                  cx->runtime->debugErrorHookData)) {
+        if (hook && !hook(cx, cx->lastMessage, reportp,
+                          cx->runtime->debugErrorHookData)) {
             onError = NULL;
         }
     }
@@ -1201,28 +1145,25 @@ js_ReportErrorAgain(JSContext *cx, const char *message, JSErrorReport *reportp)
         onError(cx, cx->lastMessage, reportp);
 }
 
-void
-js_ReportIsNotDefined(JSContext *cx, const char *name)
-{
+void js_ReportIsNotDefined(JSContext *cx, const char *name) {
     JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NOT_DEFINED, name);
 }
 
 #if defined DEBUG && defined XP_UNIX
 /* For gdb usage. */
-void js_traceon(JSContext *cx)  { cx->tracefp = stderr; }
+void js_traceon(JSContext *cx) { cx->tracefp = stderr; }
 void js_traceoff(JSContext *cx) { cx->tracefp = NULL; }
 #endif
 
 JSErrorFormatString js_ErrorFormatString[JSErr_Limit] = {
-#define MSG_DEF(name, number, count, exception, format) \
-    { format, count, exception } ,
+#define MSG_DEF(name, number, count, exception, format)                        \
+    {format, count, exception},
 #include "js.msg"
 #undef MSG_DEF
 };
 
-const JSErrorFormatString *
-js_GetErrorMessage(void *userRef, const char *locale, const uintN errorNumber)
-{
+const JSErrorFormatString *js_GetErrorMessage(void *userRef, const char *locale,
+                                              const uintN errorNumber) {
     if ((errorNumber > 0) && (errorNumber < JSErr_Limit))
         return &js_ErrorFormatString[errorNumber];
     return NULL;

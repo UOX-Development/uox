@@ -14,6 +14,7 @@
 		64A753D0291D2F7400F9A14E /* serialgen.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 64A753CE291D2F7400F9A14E /* serialgen.cpp */; };
 		64A753D3291D79F000F9A14E /* objectfactory.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 64A753D1291D79F000F9A14E /* objectfactory.cpp */; };
 		64A753DA291F28FB00F9A14E /* tileinfo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 64A753D8291F28FB00F9A14E /* tileinfo.cpp */; };
+		64C45BB229226DDF009F8F4C /* timeofday.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 64C45BB029226DDF009F8F4C /* timeofday.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -60,6 +61,8 @@
 		64A753D9291F28FB00F9A14E /* tileinfo.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = tileinfo.hpp; sourceTree = "<group>"; };
 		64A753DE291FF61F00F9A14E /* uox.cfg */ = {isa = PBXFileReference; lastKnownFileType = text; name = uox.cfg; path = ../uox.cfg; sourceTree = "<group>"; };
 		64A753DF291FF6D300F9A14E /* tileinfo.cfg */ = {isa = PBXFileReference; lastKnownFileType = text; path = tileinfo.cfg; sourceTree = "<group>"; };
+		64C45BB029226DDF009F8F4C /* timeofday.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = timeofday.cpp; sourceTree = "<group>"; };
+		64C45BB129226DDF009F8F4C /* timeofday.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = timeofday.hpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -139,10 +142,8 @@
 			children = (
 				640752CB29198490009F004D /* main.cpp */,
 				640752CC29198490009F004D /* main.hpp */,
-				640752D6291A7F4D009F004D /* argument.cpp */,
-				640752D7291A7F4D009F004D /* argument.hpp */,
-				64A753AD291AA4E200F9A14E /* configuration.cpp */,
-				64A753AE291AA4E200F9A14E /* configuration.hpp */,
+				64C45BAF29226D9F009F8F4C /* general */,
+				64C45BAD29226D88009F8F4C /* startup */,
 				64A753D5291E9A8000F9A14E /* defines.h */,
 			);
 			path = main;
@@ -189,6 +190,26 @@
 			);
 			name = server_data;
 			path = ../server_data;
+			sourceTree = "<group>";
+		};
+		64C45BAD29226D88009F8F4C /* startup */ = {
+			isa = PBXGroup;
+			children = (
+				640752D6291A7F4D009F004D /* argument.cpp */,
+				640752D7291A7F4D009F004D /* argument.hpp */,
+				64A753AD291AA4E200F9A14E /* configuration.cpp */,
+				64A753AE291AA4E200F9A14E /* configuration.hpp */,
+			);
+			path = startup;
+			sourceTree = "<group>";
+		};
+		64C45BAF29226D9F009F8F4C /* general */ = {
+			isa = PBXGroup;
+			children = (
+				64C45BB029226DDF009F8F4C /* timeofday.cpp */,
+				64C45BB129226DDF009F8F4C /* timeofday.hpp */,
+			);
+			path = general;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -269,6 +290,7 @@
 				640752D8291A7F4D009F004D /* argument.cpp in Sources */,
 				64A753D3291D79F000F9A14E /* objectfactory.cpp in Sources */,
 				640752CD29198490009F004D /* main.cpp in Sources */,
+				64C45BB229226DDF009F8F4C /* timeofday.cpp in Sources */,
 				64A753AF291AA4E200F9A14E /* configuration.cpp in Sources */,
 				64A753DA291F28FB00F9A14E /* tileinfo.cpp in Sources */,
 			);

@@ -42,27 +42,27 @@
  * "Fast Allocation and Deallocation of Memory Based on Object Lifetimes"
  * David R. Hanson, Software -- Practice and Experience, Vol. 20(1).
  */
+#include "jsarena.h" /* Added by JSIFY */
+#include "jsbit.h"
 #include "jsstddef.h"
+#include "jstypes.h"
+#include "jsutil.h" /* Added by JSIFY */
 #include <stdlib.h>
 #include <string.h>
-#include "jstypes.h"
-#include "jsbit.h"
-#include "jsarena.h" /* Added by JSIFY */
-#include "jsutil.h" /* Added by JSIFY */
 
 #ifdef JS_ARENAMETER
 static JSArenaStats *arena_stats_list;
 
-#define COUNT(pool,what)  (pool)->stats.what++
+#define COUNT(pool, what) (pool)->stats.what++
 #else
-#define COUNT(pool,what)  /* nothing */
+#define COUNT(pool, what) /* nothing */
 #endif
 
-#define JS_ARENA_DEFAULT_ALIGN  sizeof(double)
+#define JS_ARENA_DEFAULT_ALIGN sizeof(double)
 
 JS_PUBLIC_API(void)
-JS_InitArenaPool(JSArenaPool *pool, const char *name, size_t size, size_t align)
-{
+JS_InitArenaPool(JSArenaPool *pool, const char *name, size_t size,
+                 size_t align) {
     if (align == 0)
         align = JS_ARENA_DEFAULT_ALIGN;
     pool->mask = JS_BITMASK(JS_CeilingLog2(align));
@@ -113,22 +113,18 @@ JS_InitArenaPool(JSArenaPool *pool, const char *name, size_t size, size_t align)
  * contains p.  GET_HEADER and SET_HEADER operate on an oversized arena a, in
  * the case of SET_HEADER with back-pointer ap.
  */
-#define POINTER_MASK            ((jsuword)(JS_ALIGN_OF_POINTER - 1))
-#define HEADER_SIZE(pool)       (sizeof(JSArena **)                           \
-                                 + (((pool)->mask < POINTER_MASK)             \
-                                    ? POINTER_MASK - (pool)->mask             \
-                                    : 0))
-#define HEADER_BASE_MASK(pool)  ((pool)->mask | POINTER_MASK)
-#define PTR_TO_HEADER(pool,p)   (JS_ASSERT(((jsuword)(p)                      \
-                                            & HEADER_BASE_MASK(pool))         \
-                                           == 0),                             \
-                                 (JSArena ***)(p) - 1)
-#define GET_HEADER(pool,a)      (*PTR_TO_HEADER(pool, (a)->base))
-#define SET_HEADER(pool,a,ap)   (*PTR_TO_HEADER(pool, (a)->base) = (ap))
+#define POINTER_MASK ((jsuword)(JS_ALIGN_OF_POINTER - 1))
+#define HEADER_SIZE(pool)                                                      \
+    (sizeof(JSArena **) +                                                      \
+     (((pool)->mask < POINTER_MASK) ? POINTER_MASK - (pool)->mask : 0))
+#define HEADER_BASE_MASK(pool) ((pool)->mask | POINTER_MASK)
+#define PTR_TO_HEADER(pool, p)                                                 \
+    (JS_ASSERT(((jsuword)(p)&HEADER_BASE_MASK(pool)) == 0), (JSArena ***)(p)-1)
+#define GET_HEADER(pool, a) (*PTR_TO_HEADER(pool, (a)->base))
+#define SET_HEADER(pool, a, ap) (*PTR_TO_HEADER(pool, (a)->base) = (ap))
 
 JS_PUBLIC_API(void *)
-JS_ArenaAllocate(JSArenaPool *pool, size_t nb)
-{
+JS_ArenaAllocate(JSArenaPool *pool, size_t nb) {
     JSArena **ap, *a, *b;
     jsuword extra, hdrsz, gross;
     void *p;
@@ -155,12 +151,12 @@ JS_ArenaAllocate(JSArenaPool *pool, size_t nb)
             gross = hdrsz + JS_MAX(nb, pool->arenasize);
             if (gross < nb)
                 return NULL;
-            b = (JSArena *) malloc(gross);
+            b = (JSArena *)malloc(gross);
             if (!b)
                 return NULL;
             b->next = NULL;
             b->limit = (jsuword)b + gross;
-            JS_COUNT_ARENA(pool,++);
+            JS_COUNT_ARENA(pool, ++);
             COUNT(pool, nmallocs);
 
             /* If oversized, store ap in the header, just before a->base. */
@@ -175,7 +171,7 @@ JS_ArenaAllocate(JSArenaPool *pool, size_t nb)
             }
             continue;
         }
-        a = *ap;                                /* move to next arena */
+        a = *ap; /* move to next arena */
     }
 
     p = (void *)a->avail;
@@ -185,8 +181,7 @@ JS_ArenaAllocate(JSArenaPool *pool, size_t nb)
 }
 
 JS_PUBLIC_API(void *)
-JS_ArenaRealloc(JSArenaPool *pool, void *p, size_t size, size_t incr)
-{
+JS_ArenaRealloc(JSArenaPool *pool, void *p, size_t size, size_t incr) {
     JSArena **ap, *a, *b;
     jsuword boff, aoff, extra, hdrsz, gross;
 
@@ -207,11 +202,11 @@ JS_ArenaRealloc(JSArenaPool *pool, void *p, size_t size, size_t incr)
     boff = JS_UPTRDIFF(a->base, a);
     aoff = JS_ARENA_ALIGN(pool, size + incr);
     JS_ASSERT(aoff > pool->arenasize);
-    extra = HEADER_SIZE(pool);                  /* oversized header holds ap */
-    hdrsz = sizeof *a + extra + pool->mask;     /* header and alignment slop */
+    extra = HEADER_SIZE(pool);              /* oversized header holds ap */
+    hdrsz = sizeof *a + extra + pool->mask; /* header and alignment slop */
     gross = hdrsz + aoff;
     JS_ASSERT(gross > aoff);
-    a = (JSArena *) realloc(a, gross);
+    a = (JSArena *)realloc(a, gross);
     if (!a)
         return NULL;
 #ifdef JS_ARENAMETER
@@ -247,8 +242,7 @@ JS_ArenaRealloc(JSArenaPool *pool, void *p, size_t size, size_t incr)
 }
 
 JS_PUBLIC_API(void *)
-JS_ArenaGrow(JSArenaPool *pool, void *p, size_t size, size_t incr)
-{
+JS_ArenaGrow(JSArenaPool *pool, void *p, size_t size, size_t incr) {
     void *newp;
 
     /*
@@ -268,9 +262,7 @@ JS_ArenaGrow(JSArenaPool *pool, void *p, size_t size, size_t incr)
  * Free tail arenas linked after head, which may not be the true list head.
  * Reset pool->current to point to head in case it pointed at a tail arena.
  */
-static void
-FreeArenaList(JSArenaPool *pool, JSArena *head)
-{
+static void FreeArenaList(JSArenaPool *pool, JSArena *head) {
     JSArena **ap, *a;
 
     ap = &head->next;
@@ -290,7 +282,7 @@ FreeArenaList(JSArenaPool *pool, JSArena *head)
     do {
         *ap = a->next;
         JS_CLEAR_ARENA(a);
-        JS_COUNT_ARENA(pool,--);
+        JS_COUNT_ARENA(pool, --);
         free(a);
     } while ((a = *ap) != NULL);
 
@@ -298,8 +290,7 @@ FreeArenaList(JSArenaPool *pool, JSArena *head)
 }
 
 JS_PUBLIC_API(void)
-JS_ArenaRelease(JSArenaPool *pool, char *mark)
-{
+JS_ArenaRelease(JSArenaPool *pool, char *mark) {
     JSArena *a;
 
     for (a = &pool->first; a; a = a->next) {
@@ -315,8 +306,7 @@ JS_ArenaRelease(JSArenaPool *pool, char *mark)
 }
 
 JS_PUBLIC_API(void)
-JS_ArenaFreeAllocation(JSArenaPool *pool, void *p, size_t size)
-{
+JS_ArenaFreeAllocation(JSArenaPool *pool, void *p, size_t size) {
     JSArena **ap, *a, *b;
     jsuword q;
 
@@ -362,7 +352,7 @@ JS_ArenaFreeAllocation(JSArenaPool *pool, void *p, size_t size)
      * the arena that precedes a.
      */
     if (pool->current == a)
-        pool->current = (JSArena *) ((char *)ap - offsetof(JSArena, next));
+        pool->current = (JSArena *)((char *)ap - offsetof(JSArena, next));
 
     /*
      * This is a non-LIFO deallocation, so take care to fix up a->next's back
@@ -374,20 +364,18 @@ JS_ArenaFreeAllocation(JSArenaPool *pool, void *p, size_t size)
         SET_HEADER(pool, b, ap);
     }
     JS_CLEAR_ARENA(a);
-    JS_COUNT_ARENA(pool,--);
+    JS_COUNT_ARENA(pool, --);
     free(a);
 }
 
 JS_PUBLIC_API(void)
-JS_FreeArenaPool(JSArenaPool *pool)
-{
+JS_FreeArenaPool(JSArenaPool *pool) {
     FreeArenaList(pool, &pool->first);
     COUNT(pool, ndeallocs);
 }
 
 JS_PUBLIC_API(void)
-JS_FinishArenaPool(JSArenaPool *pool)
-{
+JS_FinishArenaPool(JSArenaPool *pool) {
     FreeArenaList(pool, &pool->first);
 #ifdef JS_ARENAMETER
     {
@@ -407,19 +395,14 @@ JS_FinishArenaPool(JSArenaPool *pool)
 }
 
 JS_PUBLIC_API(void)
-JS_ArenaFinish()
-{
-}
+JS_ArenaFinish() {}
 
 JS_PUBLIC_API(void)
-JS_ArenaShutDown(void)
-{
-}
+JS_ArenaShutDown(void) {}
 
 #ifdef JS_ARENAMETER
 JS_PUBLIC_API(void)
-JS_ArenaCountAllocation(JSArenaPool *pool, size_t nb)
-{
+JS_ArenaCountAllocation(JSArenaPool *pool, size_t nb) {
     pool->stats.nallocs++;
     pool->stats.nbytes += nb;
     if (nb > pool->stats.maxalloc)
@@ -428,14 +411,12 @@ JS_ArenaCountAllocation(JSArenaPool *pool, size_t nb)
 }
 
 JS_PUBLIC_API(void)
-JS_ArenaCountInplaceGrowth(JSArenaPool *pool, size_t size, size_t incr)
-{
+JS_ArenaCountInplaceGrowth(JSArenaPool *pool, size_t size, size_t incr) {
     pool->stats.ninplace++;
 }
 
 JS_PUBLIC_API(void)
-JS_ArenaCountGrowth(JSArenaPool *pool, size_t size, size_t incr)
-{
+JS_ArenaCountGrowth(JSArenaPool *pool, size_t size, size_t incr) {
     pool->stats.ngrows++;
     pool->stats.nbytes += incr;
     pool->stats.variance -= size * size;
@@ -446,23 +427,16 @@ JS_ArenaCountGrowth(JSArenaPool *pool, size_t size, size_t incr)
 }
 
 JS_PUBLIC_API(void)
-JS_ArenaCountRelease(JSArenaPool *pool, char *mark)
-{
-    pool->stats.nreleases++;
-}
+JS_ArenaCountRelease(JSArenaPool *pool, char *mark) { pool->stats.nreleases++; }
 
 JS_PUBLIC_API(void)
-JS_ArenaCountRetract(JSArenaPool *pool, char *mark)
-{
-    pool->stats.nfastrels++;
-}
+JS_ArenaCountRetract(JSArenaPool *pool, char *mark) { pool->stats.nfastrels++; }
 
 #include <math.h>
 #include <stdio.h>
 
 JS_PUBLIC_API(void)
-JS_DumpArenaStats(FILE *fp)
-{
+JS_DumpArenaStats(FILE *fp) {
     JSArenaStats *stats;
     uint32 nallocs, nbytes;
     double mean, variance, sigma;

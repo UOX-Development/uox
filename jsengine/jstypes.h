@@ -104,7 +104,7 @@
 #define JS_EXTERN_DATA(__type) extern __type _export
 #define JS_EXPORT_DATA(__type) __type _export
 
-#define JS_DLL_CALLBACK             __cdecl __loadds
+#define JS_DLL_CALLBACK __cdecl __loadds
 #define JS_STATIC_DLL_CALLBACK(__x) static __x CALLBACK
 
 #else /* this must be .EXE */
@@ -113,14 +113,14 @@
 #define JS_EXTERN_DATA(__type) extern __type _export
 #define JS_EXPORT_DATA(__type) __type _export
 
-#define JS_DLL_CALLBACK             __cdecl __loadds
+#define JS_DLL_CALLBACK __cdecl __loadds
 #define JS_STATIC_DLL_CALLBACK(__x) __x JS_DLL_CALLBACK
 #endif /* _WINDLL */
 
 #else /* Unix */
 
 #ifdef HAVE_VISIBILITY_ATTRIBUTE
-#define JS_EXTERNAL_VIS __attribute__((visibility ("default")))
+#define JS_EXTERNAL_VIS __attribute__((visibility("default")))
 #else
 #define JS_EXTERNAL_VIS
 #endif
@@ -136,23 +136,23 @@
 #endif
 
 #ifdef _WIN32
-#  if defined(__MWERKS__) || defined(__GNUC__)
-#    define JS_IMPORT_API(__x)      __x
-#  else
-#    define JS_IMPORT_API(__x)      __declspec(dllimport) __x
-#  endif
-#elif defined(XP_OS2) && defined(__declspec)
-#    define JS_IMPORT_API(__x)      __declspec(dllimport) __x
+#if defined(__MWERKS__) || defined(__GNUC__)
+#define JS_IMPORT_API(__x) __x
 #else
-#    define JS_IMPORT_API(__x)      JS_EXPORT_API (__x)
+#define JS_IMPORT_API(__x) __declspec(dllimport) __x
+#endif
+#elif defined(XP_OS2) && defined(__declspec)
+#define JS_IMPORT_API(__x) __declspec(dllimport) __x
+#else
+#define JS_IMPORT_API(__x) JS_EXPORT_API(__x)
 #endif
 
 #if defined(_WIN32) && !defined(__MWERKS__)
-#    define JS_IMPORT_DATA(__x)      __declspec(dllimport) __x
+#define JS_IMPORT_DATA(__x) __declspec(dllimport) __x
 #elif defined(XP_OS2) && defined(__declspec)
-#    define JS_IMPORT_DATA(__x)      __declspec(dllimport) __x
+#define JS_IMPORT_DATA(__x) __declspec(dllimport) __x
 #else
-#    define JS_IMPORT_DATA(__x)     JS_EXPORT_DATA (__x)
+#define JS_IMPORT_DATA(__x) JS_EXPORT_DATA(__x)
 #endif
 
 /*
@@ -162,22 +162,22 @@
  * should not.
  */
 #ifdef EXPORT_JS_API
-#define JS_PUBLIC_API(t)    JS_EXPORT_API(t)
-#define JS_PUBLIC_DATA(t)   JS_EXPORT_DATA(t)
+#define JS_PUBLIC_API(t) JS_EXPORT_API(t)
+#define JS_PUBLIC_DATA(t) JS_EXPORT_DATA(t)
 #else
-#define JS_PUBLIC_API(t)    JS_IMPORT_API(t)
-#define JS_PUBLIC_DATA(t)   JS_IMPORT_DATA(t)
+#define JS_PUBLIC_API(t) JS_IMPORT_API(t)
+#define JS_PUBLIC_DATA(t) JS_IMPORT_DATA(t)
 #endif
 
-#define JS_FRIEND_API(t)    JS_PUBLIC_API(t)
-#define JS_FRIEND_DATA(t)   JS_PUBLIC_DATA(t)
+#define JS_FRIEND_API(t) JS_PUBLIC_API(t)
+#define JS_FRIEND_DATA(t) JS_PUBLIC_DATA(t)
 
 #ifdef _WIN32
-#   define JS_INLINE __inline
+#define JS_INLINE __inline
 #elif defined(__GNUC__)
-#   define JS_INLINE
+#define JS_INLINE
 #else
-#   define JS_INLINE
+#define JS_INLINE
 #endif
 
 /***********************************************************************
@@ -187,8 +187,10 @@
 **      Macro body brackets so that macros with compound statement definitions
 **      behave syntactically more like functions when called.
 ***********************************************************************/
-#define JS_BEGIN_MACRO  do {
-#define JS_END_MACRO    } while (0)
+#define JS_BEGIN_MACRO do {
+#define JS_END_MACRO                                                           \
+    }                                                                          \
+    while (0)
 
 /***********************************************************************
 ** MACROS:      JS_BEGIN_EXTERN_C
@@ -197,8 +199,8 @@
 **      Macro shorthands for conditional C++ extern block delimiters.
 ***********************************************************************/
 #ifdef __cplusplus
-#define JS_BEGIN_EXTERN_C       extern "C" {
-#define JS_END_EXTERN_C         }
+#define JS_BEGIN_EXTERN_C extern "C" {
+#define JS_END_EXTERN_C }
 #else
 #define JS_BEGIN_EXTERN_C
 #define JS_END_EXTERN_C
@@ -210,8 +212,8 @@
 ** DESCRIPTION:
 ** Bit masking macros.  XXX n must be <= 31 to be portable
 ***********************************************************************/
-#define JS_BIT(n)       ((JSUint32)1 << (n))
-#define JS_BITMASK(n)   (JS_BIT(n) - 1)
+#define JS_BIT(n) ((JSUint32)1 << (n))
+#define JS_BITMASK(n) (JS_BIT(n) - 1)
 
 /***********************************************************************
 ** MACROS:      JS_PTR_TO_INT32
@@ -221,9 +223,9 @@
 ** DESCRIPTION:
 ** Integer to pointer and pointer to integer conversion macros.
 ***********************************************************************/
-#define JS_PTR_TO_INT32(x)  ((jsint)((char *)(x) - (char *)0))
+#define JS_PTR_TO_INT32(x) ((jsint)((char *)(x) - (char *)0))
 #define JS_PTR_TO_UINT32(x) ((jsuint)((char *)(x) - (char *)0))
-#define JS_INT32_TO_PTR(x)  ((void *)((char *)0 + (jsint)(x)))
+#define JS_INT32_TO_PTR(x) ((void *)((char *)0 + (jsint)(x)))
 #define JS_UINT32_TO_PTR(x) ((void *)((char *)0 + (jsuint)(x)))
 
 /***********************************************************************
@@ -234,18 +236,19 @@
 ** DESCRIPTION:
 **      Commonly used macros for operations on compatible types.
 ***********************************************************************/
-#define JS_HOWMANY(x,y) (((x)+(y)-1)/(y))
-#define JS_ROUNDUP(x,y) (JS_HOWMANY(x,y)*(y))
-#define JS_MIN(x,y)     ((x)<(y)?(x):(y))
-#define JS_MAX(x,y)     ((x)>(y)?(x):(y))
+#define JS_HOWMANY(x, y) (((x) + (y)-1) / (y))
+#define JS_ROUNDUP(x, y) (JS_HOWMANY(x, y) * (y))
+#define JS_MIN(x, y) ((x) < (y) ? (x) : (y))
+#define JS_MAX(x, y) ((x) > (y) ? (x) : (y))
 
-#if (defined(XP_WIN) && !defined(CROSS_COMPILE)) || defined (WINCE)
-#    include "jscpucfg.h"        /* Use standard Mac or Windows configuration */
-#elif defined(XP_UNIX) || defined(XP_BEOS) || defined(XP_OS2) || defined(CROSS_COMPILE)
-#    include "jsautocfg.h"       /* Use auto-detected configuration */
-#    include "jsosdep.h"         /* ...and platform-specific flags */
+#if (defined(XP_WIN) && !defined(CROSS_COMPILE)) || defined(WINCE)
+#include "jscpucfg.h" /* Use standard Mac or Windows configuration */
+#elif defined(XP_UNIX) || defined(XP_BEOS) || defined(XP_OS2) ||               \
+    defined(CROSS_COMPILE)
+#include "jsautocfg.h" /* Use auto-detected configuration */
+#include "jsosdep.h"   /* ...and platform-specific flags */
 #else
-#    error "Must define one of XP_BEOS, XP_OS2, XP_WIN or XP_UNIX"
+#error "Must define one of XP_BEOS, XP_OS2, XP_WIN or XP_UNIX"
 #endif
 
 JS_BEGIN_EXTERN_C
@@ -286,13 +289,13 @@ typedef short JSInt16;
 #if JS_BYTES_PER_INT == 4
 typedef unsigned int JSUint32;
 typedef int JSInt32;
-#define JS_INT32(x)  x
-#define JS_UINT32(x) x ## U
+#define JS_INT32(x) x
+#define JS_UINT32(x) x##U
 #elif JS_BYTES_PER_LONG == 4
 typedef unsigned long JSUint32;
 typedef long JSInt32;
-#define JS_INT32(x)  x ## L
-#define JS_UINT32(x) x ## UL
+#define JS_INT32(x) x##L
+#define JS_UINT32(x) x##UL
 #else
 #error No suitable type for JSInt32/JSUint32
 #endif
@@ -315,7 +318,7 @@ typedef unsigned long JSUint64;
 typedef __int64 JSInt64;
 typedef unsigned __int64 JSUint64;
 #elif defined(WIN32) && !defined(__GNUC__)
-typedef __int64  JSInt64;
+typedef __int64 JSInt64;
 typedef unsigned __int64 JSUint64;
 #else
 typedef long long JSInt64;
@@ -353,7 +356,7 @@ typedef unsigned int JSUintn;
 ** DESCRIPTION:
 **  NSPR's floating point type is always 64 bits.
 ************************************************************************/
-typedef double          JSFloat64;
+typedef double JSFloat64;
 
 /************************************************************************
 ** TYPES:       JSSize
@@ -432,11 +435,11 @@ typedef unsigned long JSUword;
 **
 ***********************************************************************/
 #if defined(__GNUC__) && (__GNUC__ > 2)
-#define JS_LIKELY(x)    (__builtin_expect((x), 1))
-#define JS_UNLIKELY(x)  (__builtin_expect((x), 0))
+#define JS_LIKELY(x) (__builtin_expect((x), 1))
+#define JS_UNLIKELY(x) (__builtin_expect((x), 0))
 #else
-#define JS_LIKELY(x)    (x)
-#define JS_UNLIKELY(x)  (x)
+#define JS_LIKELY(x) (x)
+#define JS_UNLIKELY(x) (x)
 #endif
 
 /***********************************************************************
@@ -456,8 +459,8 @@ typedef unsigned long JSUword;
 **
 ***********************************************************************/
 
-#define JS_ARRAY_LENGTH(array) (sizeof (array) / sizeof (array)[0])
-#define JS_ARRAY_END(array)    ((array) + JS_ARRAY_LENGTH(array))
+#define JS_ARRAY_LENGTH(array) (sizeof(array) / sizeof(array)[0])
+#define JS_ARRAY_END(array) ((array) + JS_ARRAY_LENGTH(array))
 
 JS_END_EXTERN_C
 

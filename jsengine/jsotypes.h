@@ -112,14 +112,14 @@ typedef JSInt8 int8;
 #endif /* HPUX */
 #endif /* AIX && HAVE_SYS_INTTYPES_H */
 
-#endif  /* XP_BEOS */
+#endif /* XP_BEOS */
 
 typedef JSFloat64 float64;
 
 /* Re: jsbit.h */
-#define TEST_BIT        JS_TEST_BIT
-#define SET_BIT         JS_SET_BIT
-#define CLEAR_BIT       JS_CLEAR_BIT
+#define TEST_BIT JS_TEST_BIT
+#define SET_BIT JS_SET_BIT
+#define CLEAR_BIT JS_CLEAR_BIT
 
 /* Re: prarena.h->plarena.h */
 #define PRArena PLArena

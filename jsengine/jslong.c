@@ -36,21 +36,18 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "jslong.h"
 #include "jsstddef.h"
 #include "jstypes.h"
-#include "jslong.h"
 
-static JSInt64 ll_zero = JSLL_INIT( 0x00000000,0x00000000 );
-static JSInt64 ll_maxint = JSLL_INIT( 0x7fffffff, 0xffffffff );
-static JSInt64 ll_minint = JSLL_INIT( 0x80000000, 0x00000000 );
+static JSInt64 ll_zero = JSLL_INIT(0x00000000, 0x00000000);
+static JSInt64 ll_maxint = JSLL_INIT(0x7fffffff, 0xffffffff);
+static JSInt64 ll_minint = JSLL_INIT(0x80000000, 0x00000000);
 
 #ifdef HAVE_WATCOM_BUG_2
-JSInt64 __pascal __loadds __export
-    JSLL_Zero(void) { return ll_zero; }
-JSInt64 __pascal __loadds __export
-    JSLL_MaxInt(void) { return ll_maxint; }
-JSInt64 __pascal __loadds __export
-    JSLL_MinInt(void) { return ll_minint; }
+JSInt64 __pascal __loadds __export JSLL_Zero(void) { return ll_zero; }
+JSInt64 __pascal __loadds __export JSLL_MaxInt(void) { return ll_maxint; }
+JSInt64 __pascal __loadds __export JSLL_MinInt(void) { return ll_minint; }
 #else
 JS_PUBLIC_API(JSInt64) JSLL_Zero(void) { return ll_zero; }
 JS_PUBLIC_API(JSInt64) JSLL_MaxInt(void) { return ll_maxint; }
@@ -61,8 +58,7 @@ JS_PUBLIC_API(JSInt64) JSLL_MinInt(void) { return ll_minint; }
 /*
 ** Divide 64-bit a by 32-bit b, which must be normalized so its high bit is 1.
 */
-static void norm_udivmod32(JSUint32 *qp, JSUint32 *rp, JSUint64 a, JSUint32 b)
-{
+static void norm_udivmod32(JSUint32 *qp, JSUint32 *rp, JSUint64 a, JSUint32 b) {
     JSUint32 d1, d0, q1, q0;
     JSUint32 r1, r0, m;
 
@@ -74,7 +70,7 @@ static void norm_udivmod32(JSUint32 *qp, JSUint32 *rp, JSUint64 a, JSUint32 b)
     r1 = (r1 << 16) | jshi16(a.lo);
     if (r1 < m) {
         q1--, r1 += b;
-        if (r1 >= b     /* i.e., we didn't get a carry when adding to r1 */
+        if (r1 >= b /* i.e., we didn't get a carry when adding to r1 */
             && r1 < m) {
             q1--, r1 += b;
         }
@@ -86,8 +82,7 @@ static void norm_udivmod32(JSUint32 *qp, JSUint32 *rp, JSUint64 a, JSUint32 b)
     r0 = (r0 << 16) | jslo16(a.lo);
     if (r0 < m) {
         q0--, r0 += b;
-        if (r0 >= b
-            && r0 < m) {
+        if (r0 >= b && r0 < m) {
             q0--, r0 += b;
         }
     }
@@ -95,8 +90,7 @@ static void norm_udivmod32(JSUint32 *qp, JSUint32 *rp, JSUint64 a, JSUint32 b)
     *rp = r0 - m;
 }
 
-static JSUint32 CountLeadingZeros(JSUint32 a)
-{
+static JSUint32 CountLeadingZeros(JSUint32 a) {
     JSUint32 t;
     JSUint32 r = 32;
 
@@ -115,8 +109,8 @@ static JSUint32 CountLeadingZeros(JSUint32 a)
     return r;
 }
 
-JS_PUBLIC_API(void) jsll_udivmod(JSUint64 *qp, JSUint64 *rp, JSUint64 a, JSUint64 b)
-{
+JS_PUBLIC_API(void)
+jsll_udivmod(JSUint64 *qp, JSUint64 *rp, JSUint64 a, JSUint64 b) {
     JSUint32 n0, n1, n2;
     JSUint32 q0, q1;
     JSUint32 rsh, lsh;
@@ -148,8 +142,8 @@ JS_PUBLIC_API(void) jsll_udivmod(JSUint64 *qp, JSUint64 *rp, JSUint64 a, JSUint6
         } else {
             /* (q1 q0) = (n1 n0) / (0 d0) */
 
-            if (b.lo == 0)              /* user wants to divide by zero! */
-                b.lo = 1 / b.lo;        /* so go ahead and crash */
+            if (b.lo == 0)       /* user wants to divide by zero! */
+                b.lo = 1 / b.lo; /* so go ahead and crash */
 
             lsh = CountLeadingZeros(b.lo);
 

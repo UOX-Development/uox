@@ -41,40 +41,38 @@
 /*
  * JS symbol tables.
  */
-#include "jsstddef.h"
-#include <stdlib.h>
-#include <string.h>
-#include "jstypes.h"
+#include "jsscope.h"
+#include "jsapi.h"
 #include "jsarena.h"
+#include "jsatom.h"
 #include "jsbit.h"
 #include "jsclist.h"
-#include "jsdhash.h"
-#include "jsutil.h" /* Added by JSIFY */
-#include "jsapi.h"
-#include "jsatom.h"
 #include "jscntxt.h"
 #include "jsdbgapi.h"
+#include "jsdhash.h"
 #include "jslock.h"
 #include "jsnum.h"
-#include "jsscope.h"
+#include "jsstddef.h"
 #include "jsstr.h"
+#include "jstypes.h"
+#include "jsutil.h" /* Added by JSIFY */
+#include <stdlib.h>
+#include <string.h>
 
-JSScope *
-js_GetMutableScope(JSContext *cx, JSObject *obj)
-{
+JSScope *js_GetMutableScope(JSContext *cx, JSObject *obj) {
     JSScope *scope, *newscope;
 
     scope = OBJ_SCOPE(obj);
     JS_ASSERT(JS_IS_SCOPE_LOCKED(cx, scope));
     if (scope->object == obj)
         return scope;
-    newscope = js_NewScope(cx, 0, scope->map.ops, LOCKED_OBJ_GET_CLASS(obj),
-                           obj);
+    newscope =
+        js_NewScope(cx, 0, scope->map.ops, LOCKED_OBJ_GET_CLASS(obj), obj);
     if (!newscope)
         return NULL;
     JS_LOCK_SCOPE(cx, newscope);
     obj->map = js_HoldObjectMap(cx, &newscope->map);
-    scope = (JSScope *) js_DropObjectMap(cx, &scope->map, obj);
+    scope = (JSScope *)js_DropObjectMap(cx, &scope->map, obj);
     JS_TRANSFER_SCOPE_LOCK(cx, scope, newscope);
     return newscope;
 }
@@ -84,23 +82,19 @@ js_GetMutableScope(JSContext *cx, JSObject *obj)
  * to minimize footprint.  But if a scope has fewer than SCOPE_HASH_THRESHOLD
  * entries, we use linear search and avoid allocating scope->table.
  */
-#define SCOPE_HASH_THRESHOLD    6
-#define MIN_SCOPE_SIZE_LOG2     4
-#define MIN_SCOPE_SIZE          JS_BIT(MIN_SCOPE_SIZE_LOG2)
-#define SCOPE_TABLE_NBYTES(n)   ((n) * sizeof(JSScopeProperty *))
+#define SCOPE_HASH_THRESHOLD 6
+#define MIN_SCOPE_SIZE_LOG2 4
+#define MIN_SCOPE_SIZE JS_BIT(MIN_SCOPE_SIZE_LOG2)
+#define SCOPE_TABLE_NBYTES(n) ((n) * sizeof(JSScopeProperty *))
 
-static void
-InitMinimalScope(JSScope *scope)
-{
+static void InitMinimalScope(JSScope *scope) {
     scope->hashShift = JS_DHASH_BITS - MIN_SCOPE_SIZE_LOG2;
     scope->entryCount = scope->removedCount = 0;
     scope->table = NULL;
     scope->lastProp = NULL;
 }
 
-static JSBool
-CreateScopeTable(JSContext *cx, JSScope *scope, JSBool report)
-{
+static JSBool CreateScopeTable(JSContext *cx, JSScope *scope, JSBool report) {
     int sizeLog2;
     JSScopeProperty *sprop, **spp;
 
@@ -119,8 +113,8 @@ CreateScopeTable(JSContext *cx, JSScope *scope, JSBool report)
         sizeLog2 = MIN_SCOPE_SIZE_LOG2;
     }
 
-    scope->table = (JSScopeProperty **)
-        calloc(JS_BIT(sizeLog2), sizeof(JSScopeProperty *));
+    scope->table =
+        (JSScopeProperty **)calloc(JS_BIT(sizeLog2), sizeof(JSScopeProperty *));
     if (!scope->table) {
         if (report)
             JS_ReportOutOfMemory(cx);
@@ -136,13 +130,11 @@ CreateScopeTable(JSContext *cx, JSScope *scope, JSBool report)
     return JS_TRUE;
 }
 
-JSScope *
-js_NewScope(JSContext *cx, jsrefcount nrefs, JSObjectOps *ops, JSClass *clasp,
-            JSObject *obj)
-{
+JSScope *js_NewScope(JSContext *cx, jsrefcount nrefs, JSObjectOps *ops,
+                     JSClass *clasp, JSObject *obj) {
     JSScope *scope;
 
-    scope = (JSScope *) JS_malloc(cx, sizeof(JSScope));
+    scope = (JSScope *)JS_malloc(cx, sizeof(JSScope));
     if (!scope)
         return NULL;
 
@@ -173,13 +165,10 @@ js_NewScope(JSContext *cx, jsrefcount nrefs, JSObjectOps *ops, JSClass *clasp,
 }
 
 #ifdef DEBUG_SCOPE_COUNT
-extern void
-js_unlog_scope(JSScope *scope);
+extern void js_unlog_scope(JSScope *scope);
 #endif
 
-void
-js_DestroyScope(JSContext *cx, JSScope *scope)
-{
+void js_DestroyScope(JSContext *cx, JSScope *scope) {
 #ifdef DEBUG_SCOPE_COUNT
     js_unlog_scope(scope);
 #endif
@@ -203,29 +192,29 @@ js_DestroyScope(JSContext *cx, JSScope *scope)
 
 #ifdef DUMP_SCOPE_STATS
 typedef struct JSScopeStats {
-    jsrefcount          searches;
-    jsrefcount          steps;
-    jsrefcount          hits;
-    jsrefcount          misses;
-    jsrefcount          stepHits;
-    jsrefcount          stepMisses;
-    jsrefcount          adds;
-    jsrefcount          redundantAdds;
-    jsrefcount          addFailures;
-    jsrefcount          changeFailures;
-    jsrefcount          compresses;
-    jsrefcount          grows;
-    jsrefcount          removes;
-    jsrefcount          removeFrees;
-    jsrefcount          uselessRemoves;
-    jsrefcount          shrinks;
+    jsrefcount searches;
+    jsrefcount steps;
+    jsrefcount hits;
+    jsrefcount misses;
+    jsrefcount stepHits;
+    jsrefcount stepMisses;
+    jsrefcount adds;
+    jsrefcount redundantAdds;
+    jsrefcount addFailures;
+    jsrefcount changeFailures;
+    jsrefcount compresses;
+    jsrefcount grows;
+    jsrefcount removes;
+    jsrefcount removeFrees;
+    jsrefcount uselessRemoves;
+    jsrefcount shrinks;
 } JSScopeStats;
 
 JS_FRIEND_DATA(JSScopeStats) js_scope_stats;
 
-# define METER(x)       JS_ATOMIC_INCREMENT(&js_scope_stats.x)
+#define METER(x) JS_ATOMIC_INCREMENT(&js_scope_stats.x)
 #else
-# define METER(x)       /* nothing */
+#define METER(x) /* nothing */
 #endif
 
 /*
@@ -236,13 +225,12 @@ JS_FRIEND_DATA(JSScopeStats) js_scope_stats;
  * have either no indexed properties, or almost all indexed and a few names,
  * so collisions between index and atom number are unlikely).
  */
-#define SCOPE_HASH0(id)                 (HASH_ID(id) * JS_GOLDEN_RATIO)
-#define SCOPE_HASH1(hash0,shift)        ((hash0) >> (shift))
-#define SCOPE_HASH2(hash0,log2,shift)   ((((hash0) << (log2)) >> (shift)) | 1)
+#define SCOPE_HASH0(id) (HASH_ID(id) * JS_GOLDEN_RATIO)
+#define SCOPE_HASH1(hash0, shift) ((hash0) >> (shift))
+#define SCOPE_HASH2(hash0, log2, shift) ((((hash0) << (log2)) >> (shift)) | 1)
 
 JS_FRIEND_API(JSScopeProperty **)
-js_SearchScope(JSScope *scope, jsid id, JSBool adding)
-{
+js_SearchScope(JSScope *scope, jsid id, JSBool adding) {
     JSHashNumber hash0, hash1, hash2;
     int hashShift, sizeLog2;
     JSScopeProperty *stored, *sprop, **spp, **firstRemoved;
@@ -327,9 +315,7 @@ js_SearchScope(JSScope *scope, jsid id, JSBool adding)
     return NULL;
 }
 
-static JSBool
-ChangeScope(JSContext *cx, JSScope *scope, int change)
-{
+static JSBool ChangeScope(JSContext *cx, JSScope *scope, int change) {
     int oldlog2, newlog2;
     uint32 oldsize, newsize, nbytes;
     JSScopeProperty **table, **oldtable, **spp, **oldspp, *sprop;
@@ -340,7 +326,7 @@ ChangeScope(JSContext *cx, JSScope *scope, int change)
     oldsize = JS_BIT(oldlog2);
     newsize = JS_BIT(newlog2);
     nbytes = SCOPE_TABLE_NBYTES(newsize);
-    table = (JSScopeProperty **) calloc(nbytes, 1);
+    table = (JSScopeProperty **)calloc(nbytes, 1);
     if (!table) {
         JS_ReportOutOfMemory(cx);
         return JS_FALSE;
@@ -379,8 +365,7 @@ ChangeScope(JSContext *cx, JSScope *scope, int change)
 #define SPROP_FLAGS_NOT_MATCHED (SPROP_MARK | SPROP_IS_DUPLICATE)
 
 JS_STATIC_DLL_CALLBACK(JSDHashNumber)
-js_HashScopeProperty(JSDHashTable *table, const void *key)
-{
+js_HashScopeProperty(JSDHashTable *table, const void *key) {
     const JSScopeProperty *sprop = (const JSScopeProperty *)key;
     JSDHashNumber hash;
     JSPropertyOp gsop;
@@ -394,8 +379,8 @@ js_HashScopeProperty(JSDHashTable *table, const void *key)
     if (gsop)
         hash = (hash >> (JS_DHASH_BITS - 4)) ^ (hash << 4) ^ (jsword)gsop;
 
-    hash = (hash >> (JS_DHASH_BITS - 4)) ^ (hash << 4)
-           ^ (sprop->flags & ~SPROP_FLAGS_NOT_MATCHED);
+    hash = (hash >> (JS_DHASH_BITS - 4)) ^ (hash << 4) ^
+           (sprop->flags & ~SPROP_FLAGS_NOT_MATCHED);
 
     hash = (hash >> (JS_DHASH_BITS - 4)) ^ (hash << 4) ^ sprop->attrs;
     hash = (hash >> (JS_DHASH_BITS - 4)) ^ (hash << 4) ^ sprop->shortid;
@@ -404,31 +389,27 @@ js_HashScopeProperty(JSDHashTable *table, const void *key)
     return hash;
 }
 
-#define SPROP_MATCH(sprop, child)                                             \
-    SPROP_MATCH_PARAMS(sprop, (child)->id, (child)->getter, (child)->setter,  \
-                       (child)->slot, (child)->attrs, (child)->flags,         \
+#define SPROP_MATCH(sprop, child)                                              \
+    SPROP_MATCH_PARAMS(sprop, (child)->id, (child)->getter, (child)->setter,   \
+                       (child)->slot, (child)->attrs, (child)->flags,          \
                        (child)->shortid)
 
-#define SPROP_MATCH_PARAMS(sprop, aid, agetter, asetter, aslot, aattrs,       \
-                           aflags, ashortid)                                  \
-    ((sprop)->id == (aid) &&                                                  \
-     SPROP_MATCH_PARAMS_AFTER_ID(sprop, agetter, asetter, aslot, aattrs,      \
+#define SPROP_MATCH_PARAMS(sprop, aid, agetter, asetter, aslot, aattrs,        \
+                           aflags, ashortid)                                   \
+    ((sprop)->id == (aid) &&                                                   \
+     SPROP_MATCH_PARAMS_AFTER_ID(sprop, agetter, asetter, aslot, aattrs,       \
                                  aflags, ashortid))
 
-#define SPROP_MATCH_PARAMS_AFTER_ID(sprop, agetter, asetter, aslot, aattrs,   \
-                                    aflags, ashortid)                         \
-    ((sprop)->getter == (agetter) &&                                          \
-     (sprop)->setter == (asetter) &&                                          \
-     (sprop)->slot == (aslot) &&                                              \
-     (sprop)->attrs == (aattrs) &&                                            \
-     (((sprop)->flags ^ (aflags)) & ~SPROP_FLAGS_NOT_MATCHED) == 0 &&         \
+#define SPROP_MATCH_PARAMS_AFTER_ID(sprop, agetter, asetter, aslot, aattrs,    \
+                                    aflags, ashortid)                          \
+    ((sprop)->getter == (agetter) && (sprop)->setter == (asetter) &&           \
+     (sprop)->slot == (aslot) && (sprop)->attrs == (aattrs) &&                 \
+     (((sprop)->flags ^ (aflags)) & ~SPROP_FLAGS_NOT_MATCHED) == 0 &&          \
      (sprop)->shortid == (ashortid))
 
 JS_STATIC_DLL_CALLBACK(JSBool)
-js_MatchScopeProperty(JSDHashTable *table,
-                      const JSDHashEntryHdr *hdr,
-                      const void *key)
-{
+js_MatchScopeProperty(JSDHashTable *table, const JSDHashEntryHdr *hdr,
+                      const void *key) {
     const JSPropertyTreeEntry *entry = (const JSPropertyTreeEntry *)hdr;
     const JSScopeProperty *sprop = entry->child;
     const JSScopeProperty *kprop = (const JSScopeProperty *)key;
@@ -437,57 +418,47 @@ js_MatchScopeProperty(JSDHashTable *table,
 }
 
 static const JSDHashTableOps PropertyTreeHashOps = {
-    JS_DHashAllocTable,
-    JS_DHashFreeTable,
-    JS_DHashGetKeyStub,
-    js_HashScopeProperty,
-    js_MatchScopeProperty,
-    JS_DHashMoveEntryStub,
-    JS_DHashClearEntryStub,
-    JS_DHashFinalizeStub,
-    NULL
-};
+    JS_DHashAllocTable,     JS_DHashFreeTable,     JS_DHashGetKeyStub,
+    js_HashScopeProperty,   js_MatchScopeProperty, JS_DHashMoveEntryStub,
+    JS_DHashClearEntryStub, JS_DHashFinalizeStub,  NULL};
 
 /*
  * A property tree node on rt->propertyFreeList overlays the following prefix
  * struct on JSScopeProperty.
  */
 typedef struct FreeNode {
-    jsid                id;
-    JSScopeProperty     *next;
-    JSScopeProperty     **prevp;
+    jsid id;
+    JSScopeProperty *next;
+    JSScopeProperty **prevp;
 } FreeNode;
 
-#define FREENODE(sprop) ((FreeNode *) (sprop))
+#define FREENODE(sprop) ((FreeNode *)(sprop))
 
-#define FREENODE_INSERT(list, sprop)                                          \
-    JS_BEGIN_MACRO                                                            \
-        FREENODE(sprop)->next = (list);                                       \
-        FREENODE(sprop)->prevp = &(list);                                     \
-        if (list)                                                             \
-            FREENODE(list)->prevp = &FREENODE(sprop)->next;                   \
-        (list) = (sprop);                                                     \
+#define FREENODE_INSERT(list, sprop)                                           \
+    JS_BEGIN_MACRO                                                             \
+    FREENODE(sprop)->next = (list);                                            \
+    FREENODE(sprop)->prevp = &(list);                                          \
+    if (list)                                                                  \
+        FREENODE(list)->prevp = &FREENODE(sprop)->next;                        \
+    (list) = (sprop);                                                          \
     JS_END_MACRO
 
-#define FREENODE_REMOVE(sprop)                                                \
-    JS_BEGIN_MACRO                                                            \
-        *FREENODE(sprop)->prevp = FREENODE(sprop)->next;                      \
-        if (FREENODE(sprop)->next)                                            \
-            FREENODE(FREENODE(sprop)->next)->prevp = FREENODE(sprop)->prevp;  \
+#define FREENODE_REMOVE(sprop)                                                 \
+    JS_BEGIN_MACRO                                                             \
+    *FREENODE(sprop)->prevp = FREENODE(sprop)->next;                           \
+    if (FREENODE(sprop)->next)                                                 \
+        FREENODE(FREENODE(sprop)->next)->prevp = FREENODE(sprop)->prevp;       \
     JS_END_MACRO
 
 /* NB: Called with the runtime lock held. */
-static JSScopeProperty *
-NewScopeProperty(JSRuntime *rt)
-{
+static JSScopeProperty *NewScopeProperty(JSRuntime *rt) {
     JSScopeProperty *sprop;
 
     sprop = rt->propertyFreeList;
     if (sprop) {
         FREENODE_REMOVE(sprop);
     } else {
-        JS_ARENA_ALLOCATE_CAST(sprop, JSScopeProperty *,
-                               &rt->propertyArenaPool,
+        JS_ARENA_ALLOCATE_CAST(sprop, JSScopeProperty *, &rt->propertyArenaPool,
                                sizeof(JSScopeProperty));
         if (!sprop)
             return NULL;
@@ -498,24 +469,22 @@ NewScopeProperty(JSRuntime *rt)
     return sprop;
 }
 
-#define CHUNKY_KIDS_TAG         ((jsuword)1)
-#define KIDS_IS_CHUNKY(kids)    ((jsuword)(kids) & CHUNKY_KIDS_TAG)
-#define KIDS_TO_CHUNK(kids)     ((PropTreeKidsChunk *)                        \
-                                 ((jsuword)(kids) & ~CHUNKY_KIDS_TAG))
-#define CHUNK_TO_KIDS(chunk)    ((JSScopeProperty *)                          \
-                                 ((jsuword)(chunk) | CHUNKY_KIDS_TAG))
-#define MAX_KIDS_PER_CHUNK      10
+#define CHUNKY_KIDS_TAG ((jsuword)1)
+#define KIDS_IS_CHUNKY(kids) ((jsuword)(kids)&CHUNKY_KIDS_TAG)
+#define KIDS_TO_CHUNK(kids)                                                    \
+    ((PropTreeKidsChunk *)((jsuword)(kids) & ~CHUNKY_KIDS_TAG))
+#define CHUNK_TO_KIDS(chunk)                                                   \
+    ((JSScopeProperty *)((jsuword)(chunk) | CHUNKY_KIDS_TAG))
+#define MAX_KIDS_PER_CHUNK 10
 
 typedef struct PropTreeKidsChunk PropTreeKidsChunk;
 
 struct PropTreeKidsChunk {
-    JSScopeProperty     *kids[MAX_KIDS_PER_CHUNK];
-    PropTreeKidsChunk   *next;
+    JSScopeProperty *kids[MAX_KIDS_PER_CHUNK];
+    PropTreeKidsChunk *next;
 };
 
-static PropTreeKidsChunk *
-NewPropTreeKidsChunk(JSRuntime *rt)
-{
+static PropTreeKidsChunk *NewPropTreeKidsChunk(JSRuntime *rt) {
     PropTreeKidsChunk *chunk;
 
     chunk = calloc(1, sizeof *chunk);
@@ -526,18 +495,15 @@ NewPropTreeKidsChunk(JSRuntime *rt)
     return chunk;
 }
 
-static void
-DestroyPropTreeKidsChunk(JSRuntime *rt, PropTreeKidsChunk *chunk)
-{
+static void DestroyPropTreeKidsChunk(JSRuntime *rt, PropTreeKidsChunk *chunk) {
     JS_RUNTIME_UNMETER(rt, propTreeKidsChunks);
     free(chunk);
 }
 
 /* NB: Called with the runtime lock held. */
-static JSBool
-InsertPropertyTreeChild(JSRuntime *rt, JSScopeProperty *parent,
-                        JSScopeProperty *child, PropTreeKidsChunk *sweptChunk)
-{
+static JSBool InsertPropertyTreeChild(JSRuntime *rt, JSScopeProperty *parent,
+                                      JSScopeProperty *child,
+                                      PropTreeKidsChunk *sweptChunk) {
     JSPropertyTreeEntry *entry;
     JSScopeProperty **childp, *kids, *sprop;
     PropTreeKidsChunk *chunk, **chunkp;
@@ -546,8 +512,8 @@ InsertPropertyTreeChild(JSRuntime *rt, JSScopeProperty *parent,
     JS_ASSERT(!parent || child->parent != parent);
 
     if (!parent) {
-        entry = (JSPropertyTreeEntry *)
-            JS_DHashTableOperate(&rt->propertyTreeHash, child, JS_DHASH_ADD);
+        entry = (JSPropertyTreeEntry *)JS_DHashTableOperate(
+            &rt->propertyTreeHash, child, JS_DHASH_ADD);
         if (!entry)
             return JS_FALSE;
         childp = &entry->child;
@@ -644,9 +610,8 @@ InsertPropertyTreeChild(JSRuntime *rt, JSScopeProperty *parent,
 }
 
 /* NB: Called with the runtime lock held. */
-static PropTreeKidsChunk *
-RemovePropertyTreeChild(JSRuntime *rt, JSScopeProperty *child)
-{
+static PropTreeKidsChunk *RemovePropertyTreeChild(JSRuntime *rt,
+                                                  JSScopeProperty *child) {
     JSPropertyTreeEntry *entry;
     JSScopeProperty *parent, *kids, *kid;
     PropTreeKidsChunk *list, *chunk, **chunkp, *lastChunk;
@@ -659,8 +624,8 @@ RemovePropertyTreeChild(JSRuntime *rt, JSScopeProperty *child)
          * matches a root child in the table that has compatible members. See
          * the "Duplicate child" comments in InsertPropertyTreeChild, above.
          */
-        entry = (JSPropertyTreeEntry *)
-            JS_DHashTableOperate(&rt->propertyTreeHash, child, JS_DHASH_LOOKUP);
+        entry = (JSPropertyTreeEntry *)JS_DHashTableOperate(
+            &rt->propertyTreeHash, child, JS_DHASH_LOOKUP);
 
         if (entry->child == child)
             JS_DHashTableRawRemove(&rt->propertyTreeHash, &entry->hdr);
@@ -717,10 +682,9 @@ RemovePropertyTreeChild(JSRuntime *rt, JSScopeProperty *child)
  * only when inserting a new child.  Thus there may be races to find or add
  * a node that result in duplicates.  We expect such races to be rare!
  */
-static JSScopeProperty *
-GetPropertyTreeChild(JSContext *cx, JSScopeProperty *parent,
-                     JSScopeProperty *child)
-{
+static JSScopeProperty *GetPropertyTreeChild(JSContext *cx,
+                                             JSScopeProperty *parent,
+                                             JSScopeProperty *child) {
     JSRuntime *rt;
     JSPropertyTreeEntry *entry;
     JSScopeProperty *sprop;
@@ -731,8 +695,8 @@ GetPropertyTreeChild(JSContext *cx, JSScopeProperty *parent,
     if (!parent) {
         JS_LOCK_RUNTIME(rt);
 
-        entry = (JSPropertyTreeEntry *)
-            JS_DHashTableOperate(&rt->propertyTreeHash, child, JS_DHASH_ADD);
+        entry = (JSPropertyTreeEntry *)JS_DHashTableOperate(
+            &rt->propertyTreeHash, child, JS_DHASH_ADD);
         if (!entry)
             goto out_of_memory;
 
@@ -807,14 +771,13 @@ out_of_memory:
 }
 
 #ifdef DEBUG_notbrendan
-#define CHECK_ANCESTOR_LINE(scope, sparse)                                    \
-    JS_BEGIN_MACRO                                                            \
-        if ((scope)->table) CheckAncestorLine(scope, sparse);                 \
+#define CHECK_ANCESTOR_LINE(scope, sparse)                                     \
+    JS_BEGIN_MACRO                                                             \
+    if ((scope)->table)                                                        \
+        CheckAncestorLine(scope, sparse);                                      \
     JS_END_MACRO
 
-static void
-CheckAncestorLine(JSScope *scope, JSBool sparse)
-{
+static void CheckAncestorLine(JSScope *scope, JSBool sparse) {
     uint32 size;
     JSScopeProperty **spp, **start, **end, *ancestorLine, *sprop, *aprop;
     uint32 entryCount, ancestorCount;
@@ -854,23 +817,19 @@ CheckAncestorLine(JSScope *scope, JSBool sparse)
 #define CHECK_ANCESTOR_LINE(scope, sparse) /* nothing */
 #endif
 
-static void
-ReportReadOnlyScope(JSContext *cx, JSScope *scope)
-{
+static void ReportReadOnlyScope(JSContext *cx, JSScope *scope) {
     JSString *str;
 
     str = js_ValueToString(cx, OBJECT_TO_JSVAL(scope->object));
     JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_READ_ONLY,
-                         str
-                         ? JS_GetStringBytes(str)
-                         : LOCKED_OBJ_GET_CLASS(scope->object)->name);
+                         str ? JS_GetStringBytes(str)
+                             : LOCKED_OBJ_GET_CLASS(scope->object)->name);
 }
 
-JSScopeProperty *
-js_AddScopeProperty(JSContext *cx, JSScope *scope, jsid id,
-                    JSPropertyOp getter, JSPropertyOp setter, uint32 slot,
-                    uintN attrs, uintN flags, intN shortid)
-{
+JSScopeProperty *js_AddScopeProperty(JSContext *cx, JSScope *scope, jsid id,
+                                     JSPropertyOp getter, JSPropertyOp setter,
+                                     uint32 slot, uintN attrs, uintN flags,
+                                     intN shortid) {
     JSScopeProperty **spp, *sprop, *overwriting, **spvec, **spp2, child;
     uint32 size, splen, i;
     int change;
@@ -934,8 +893,7 @@ js_AddScopeProperty(JSContext *cx, JSScope *scope, jsid id,
          * care which slot, copy sprop->slot into slot so we can match sprop,
          * if all other members match.
          */
-        if (!(attrs & JSPROP_SHARED) &&
-            slot == SPROP_INVALID_SLOT &&
+        if (!(attrs & JSPROP_SHARED) && slot == SPROP_INVALID_SLOT &&
             SPROP_HAS_VALID_SLOT(sprop, scope)) {
             slot = sprop->slot;
         }
@@ -1029,8 +987,8 @@ js_AddScopeProperty(JSContext *cx, JSScope *scope, jsid id,
                  * vector, by walking the (possibly sparse, due to deletions)
                  * ancestor line from scope->lastProp.
                  */
-                spvec = (JSScopeProperty **)
-                        JS_malloc(cx, SCOPE_TABLE_NBYTES(splen));
+                spvec = (JSScopeProperty **)JS_malloc(
+                    cx, SCOPE_TABLE_NBYTES(splen));
                 if (!spvec)
                     goto fail_overwrite;
                 i = splen;
@@ -1061,8 +1019,8 @@ js_AddScopeProperty(JSContext *cx, JSScope *scope, jsid id,
                             if (SCOPE_GET_PROPERTY(scope, tmp->id))
                                 i++;
                         } while ((tmp = tmp->parent) != NULL);
-                        spp2 = (JSScopeProperty **)
-                             JS_realloc(cx, spvec, SCOPE_TABLE_NBYTES(splen+i));
+                        spp2 = (JSScopeProperty **)JS_realloc(
+                            cx, spvec, SCOPE_TABLE_NBYTES(splen + i));
                         if (!spp2) {
                             JS_free(cx, spvec);
                             goto fail_overwrite;
@@ -1183,7 +1141,7 @@ js_AddScopeProperty(JSContext *cx, JSScope *scope, jsid id,
          * entry count just reached the threshold.
          */
         if (!scope->table && scope->entryCount >= SCOPE_HASH_THRESHOLD)
-            (void) CreateScopeTable(cx, scope, JS_FALSE);
+            (void)CreateScopeTable(cx, scope, JS_FALSE);
     }
 
     METER(adds);
@@ -1199,7 +1157,7 @@ fail_overwrite:
          * order can change due to a failure to overwrite an id.
          * XXXbe very minor incompatibility
          */
-        for (sprop = SCOPE_LAST_PROP(scope); ; sprop = sprop->parent) {
+        for (sprop = SCOPE_LAST_PROP(scope);; sprop = sprop->parent) {
             if (!sprop) {
                 sprop = SCOPE_LAST_PROP(scope);
                 if (overwriting->parent == sprop) {
@@ -1228,11 +1186,11 @@ fail_overwrite:
     return NULL;
 }
 
-JSScopeProperty *
-js_ChangeScopePropertyAttrs(JSContext *cx, JSScope *scope,
-                            JSScopeProperty *sprop, uintN attrs, uintN mask,
-                            JSPropertyOp getter, JSPropertyOp setter)
-{
+JSScopeProperty *js_ChangeScopePropertyAttrs(JSContext *cx, JSScope *scope,
+                                             JSScopeProperty *sprop,
+                                             uintN attrs, uintN mask,
+                                             JSPropertyOp getter,
+                                             JSPropertyOp setter) {
     JSScopeProperty child, *newsprop, **spp;
 
     CHECK_ANCESTOR_LINE(scope, JS_TRUE);
@@ -1245,8 +1203,7 @@ js_ChangeScopePropertyAttrs(JSContext *cx, JSScope *scope,
         getter = NULL;
     if (setter == JS_PropertyStub)
         setter = NULL;
-    if (sprop->attrs == attrs &&
-        sprop->getter == getter &&
+    if (sprop->attrs == attrs && sprop->getter == getter &&
         sprop->setter == setter) {
         return sprop;
     }
@@ -1289,9 +1246,9 @@ js_ChangeScopePropertyAttrs(JSContext *cx, JSScope *scope,
          * js_RemoveScopeProperty here, it will free a valid sprop->slot and
          * js_AddScopeProperty won't re-allocate it.
          */
-        newsprop = js_AddScopeProperty(cx, scope, child.id,
-                                       child.getter, child.setter, child.slot,
-                                       child.attrs, child.flags, child.shortid);
+        newsprop = js_AddScopeProperty(cx, scope, child.id, child.getter,
+                                       child.setter, child.slot, child.attrs,
+                                       child.flags, child.shortid);
     }
 
 #ifdef DUMP_SCOPE_STATS
@@ -1301,9 +1258,7 @@ js_ChangeScopePropertyAttrs(JSContext *cx, JSScope *scope,
     return newsprop;
 }
 
-JSBool
-js_RemoveScopeProperty(JSContext *cx, JSScope *scope, jsid id)
-{
+JSBool js_RemoveScopeProperty(JSContext *cx, JSScope *scope, jsid id) {
     JSScopeProperty **spp, *stored, *sprop;
     uint32 size;
 
@@ -1368,15 +1323,13 @@ js_RemoveScopeProperty(JSContext *cx, JSScope *scope, jsid id)
     size = SCOPE_CAPACITY(scope);
     if (size > MIN_SCOPE_SIZE && scope->entryCount <= size >> 2) {
         METER(shrinks);
-        (void) ChangeScope(cx, scope, -1);
+        (void)ChangeScope(cx, scope, -1);
     }
 
     return JS_TRUE;
 }
 
-void
-js_ClearScope(JSContext *cx, JSScope *scope)
-{
+void js_ClearScope(JSContext *cx, JSScope *scope) {
     CHECK_ANCESTOR_LINE(scope, JS_TRUE);
 #ifdef DEBUG
     JS_LOCK_RUNTIME_VOID(cx->runtime,
@@ -1390,9 +1343,7 @@ js_ClearScope(JSContext *cx, JSScope *scope)
     JS_ATOMIC_INCREMENT(&cx->runtime->propertyRemovals);
 }
 
-void
-js_MarkId(JSContext *cx, jsid id)
-{
+void js_MarkId(JSContext *cx, jsid id) {
     if (JSID_IS_ATOM(id))
         GC_MARK_ATOM(cx, JSID_TO_ATOM(id));
     else if (JSID_IS_OBJECT(id))
@@ -1402,12 +1353,10 @@ js_MarkId(JSContext *cx, jsid id)
 }
 
 #if defined GC_MARK_DEBUG || defined DUMP_SCOPE_STATS
-# include "jsprf.h"
+#include "jsprf.h"
 #endif
 
-void
-js_MarkScopeProperty(JSContext *cx, JSScopeProperty *sprop)
-{
+void js_MarkScopeProperty(JSContext *cx, JSScopeProperty *sprop) {
     sprop->flags |= SPROP_MARK;
     MARK_ID(cx, sprop->id);
 
@@ -1422,8 +1371,8 @@ js_MarkScopeProperty(JSContext *cx, JSScopeProperty *sprop)
             JSAtom *atom = JSID_TO_ATOM(sprop->id);
 
             id = (atom && ATOM_IS_STRING(atom))
-                 ? JS_GetStringBytes(ATOM_TO_STRING(atom))
-                 : "unknown";
+                     ? JS_GetStringBytes(ATOM_TO_STRING(atom))
+                     : "unknown";
         } else if (JSID_IS_INT(sprop->id)) {
             JS_snprintf(buf2, sizeof buf2, "%d", JSID_TO_INT(sprop->id));
             id = buf2;
@@ -1434,17 +1383,15 @@ js_MarkScopeProperty(JSContext *cx, JSScopeProperty *sprop)
 
         if (sprop->attrs & JSPROP_GETTER) {
 #ifdef GC_MARK_DEBUG
-            JS_snprintf(buf, sizeof buf, "%s %s",
-                        id, js_getter_str);
+            JS_snprintf(buf, sizeof buf, "%s %s", id, js_getter_str);
 #endif
-            GC_MARK(cx, JSVAL_TO_GCTHING((jsval) sprop->getter), buf);
+            GC_MARK(cx, JSVAL_TO_GCTHING((jsval)sprop->getter), buf);
         }
         if (sprop->attrs & JSPROP_SETTER) {
 #ifdef GC_MARK_DEBUG
-            JS_snprintf(buf, sizeof buf, "%s %s",
-                        id, js_setter_str);
+            JS_snprintf(buf, sizeof buf, "%s %s", id, js_setter_str);
 #endif
-            GC_MARK(cx, JSVAL_TO_GCTHING((jsval) sprop->setter), buf);
+            GC_MARK(cx, JSVAL_TO_GCTHING((jsval)sprop->setter), buf);
         }
     }
 #endif /* JS_HAS_GETTER_SETTER */
@@ -1452,17 +1399,15 @@ js_MarkScopeProperty(JSContext *cx, JSScopeProperty *sprop)
 
 #ifdef DUMP_SCOPE_STATS
 
-#include <stdio.h>
 #include <math.h>
+#include <stdio.h>
 
 uint32 js_nkids_max;
 uint32 js_nkids_sum;
 double js_nkids_sqsum;
 uint32 js_nkids_hist[11];
 
-static void
-MeterKidCount(uintN nkids)
-{
+static void MeterKidCount(uintN nkids) {
     if (nkids) {
         js_nkids_sum += nkids;
         js_nkids_sqsum += (double)nkids * nkids;
@@ -1472,9 +1417,7 @@ MeterKidCount(uintN nkids)
     js_nkids_hist[JS_MIN(nkids, 10)]++;
 }
 
-static void
-MeterPropertyTree(JSScopeProperty *node)
-{
+static void MeterPropertyTree(JSScopeProperty *node) {
     uintN i, nkids;
     JSScopeProperty *kids, *kid;
     PropTreeKidsChunk *chunk;
@@ -1503,17 +1446,14 @@ MeterPropertyTree(JSScopeProperty *node)
 
 JS_STATIC_DLL_CALLBACK(JSDHashOperator)
 js_MeterPropertyTree(JSDHashTable *table, JSDHashEntryHdr *hdr, uint32 number,
-                     void *arg)
-{
+                     void *arg) {
     JSPropertyTreeEntry *entry = (JSPropertyTreeEntry *)hdr;
 
     MeterPropertyTree(entry->child);
     return JS_DHASH_NEXT;
 }
 
-static void
-DumpSubtree(JSScopeProperty *sprop, int level, FILE *fp)
-{
+static void DumpSubtree(JSScopeProperty *sprop, int level, FILE *fp) {
     char buf[10];
     JSScopeProperty *kids, *kid;
     PropTreeKidsChunk *chunk;
@@ -1522,14 +1462,13 @@ DumpSubtree(JSScopeProperty *sprop, int level, FILE *fp)
     fprintf(fp, "%*sid %s g/s %p/%p slot %lu attrs %x flags %x shortid %d\n",
             level, "",
             JSID_IS_ATOM(sprop->id)
-            ? JS_GetStringBytes(ATOM_TO_STRING(JSID_TO_ATOM(sprop->id)))
+                ? JS_GetStringBytes(ATOM_TO_STRING(JSID_TO_ATOM(sprop->id)))
             : JSID_IS_OBJECT(sprop->id)
-            ? js_ValueToPrintableString(cx, OBJECT_JSID_TO_JSVAL(sprop->id))
-            : (JS_snprintf(buf, sizeof buf, "%ld", JSVAL_TO_INT(sprop->id)),
-               buf)
-            (void *) sprop->getter, (void *) sprop->setter,
-            (unsigned long) sprop->slot, sprop->attrs, sprop->flags,
-            sprop->shortid);
+                ? js_ValueToPrintableString(cx, OBJECT_JSID_TO_JSVAL(sprop->id))
+                : (JS_snprintf(buf, sizeof buf, "%ld", JSVAL_TO_INT(sprop->id)),
+                   buf)(void *)sprop->getter,
+            (void *)sprop->setter, (unsigned long)sprop->slot, sprop->attrs,
+            sprop->flags, sprop->shortid);
     kids = sprop->kids;
     if (kids) {
         ++level;
@@ -1553,9 +1492,7 @@ DumpSubtree(JSScopeProperty *sprop, int level, FILE *fp)
 
 #endif /* DUMP_SCOPE_STATS */
 
-void
-js_SweepScopeProperties(JSRuntime *rt)
-{
+void js_SweepScopeProperties(JSRuntime *rt) {
     JSArena **ap, *a;
     JSScopeProperty *limit, *sprop, *parent, *kids, *kid;
     uintN liveCount;
@@ -1587,19 +1524,16 @@ js_SweepScopeProperties(JSRuntime *rt)
             sigma = (var != 0.0) ? sqrt(var) : 0.0;
         }
 
-        fprintf(logfp,
-                "props %u nodes %g beta %g meankids %g sigma %g max %u",
-                rt->liveScopeProps, nodesum, nodesum / rt->liveScopeProps,
-                mean, sigma, js_nkids_max);
+        fprintf(logfp, "props %u nodes %g beta %g meankids %g sigma %g max %u",
+                rt->liveScopeProps, nodesum, nodesum / rt->liveScopeProps, mean,
+                sigma, js_nkids_max);
     }
 
     fprintf(logfp, " histogram %u %u %u %u %u %u %u %u %u %u %u",
-            js_nkids_hist[0], js_nkids_hist[1],
-            js_nkids_hist[2], js_nkids_hist[3],
-            js_nkids_hist[4], js_nkids_hist[5],
-            js_nkids_hist[6], js_nkids_hist[7],
-            js_nkids_hist[8], js_nkids_hist[9],
-            js_nkids_hist[10]);
+            js_nkids_hist[0], js_nkids_hist[1], js_nkids_hist[2],
+            js_nkids_hist[3], js_nkids_hist[4], js_nkids_hist[5],
+            js_nkids_hist[6], js_nkids_hist[7], js_nkids_hist[8],
+            js_nkids_hist[9], js_nkids_hist[10]);
     js_nkids_sum = js_nkids_max = 0;
     js_nkids_sqsum = 0;
     memset(js_nkids_hist, 0, sizeof js_nkids_hist);
@@ -1607,9 +1541,9 @@ js_SweepScopeProperties(JSRuntime *rt)
 
     ap = &rt->propertyArenaPool.first.next;
     while ((a = *ap) != NULL) {
-        limit = (JSScopeProperty *) a->avail;
+        limit = (JSScopeProperty *)a->avail;
         liveCount = 0;
-        for (sprop = (JSScopeProperty *) a->base; sprop < limit; sprop++) {
+        for (sprop = (JSScopeProperty *)a->base; sprop < limit; sprop++) {
             /* If the id is null, sprop is already on the freelist. */
             if (sprop->id == JSVAL_NULL)
                 continue;
@@ -1715,12 +1649,12 @@ js_SweepScopeProperties(JSRuntime *rt)
 
         /* If a contains no live properties, return it to the malloc heap. */
         if (liveCount == 0) {
-            for (sprop = (JSScopeProperty *) a->base; sprop < limit; sprop++)
+            for (sprop = (JSScopeProperty *)a->base; sprop < limit; sprop++)
                 FREENODE_REMOVE(sprop);
             JS_ARENA_DESTROY(&rt->propertyArenaPool, a, ap);
         } else {
 #ifdef DUMP_SCOPE_STATS
-            livePropCapacity += limit - (JSScopeProperty *) a->base;
+            livePropCapacity += limit - (JSScopeProperty *)a->base;
             totalLiveCount += liveCount;
 #endif
             ap = &a->next;
@@ -1739,7 +1673,7 @@ js_SweepScopeProperties(JSRuntime *rt)
         if (dumpfp) {
             JSPropertyTreeEntry *pte, *end;
 
-            pte = (JSPropertyTreeEntry *) rt->propertyTreeHash.entryStore;
+            pte = (JSPropertyTreeEntry *)rt->propertyTreeHash.entryStore;
             end = pte + JS_DHASH_TABLE_SIZE(&rt->propertyTreeHash);
             while (pte < end) {
                 if (pte->child)
@@ -1752,9 +1686,7 @@ js_SweepScopeProperties(JSRuntime *rt)
 #endif
 }
 
-JSBool
-js_InitPropertyTree(JSRuntime *rt)
-{
+JSBool js_InitPropertyTree(JSRuntime *rt) {
     if (!JS_DHashTableInit(&rt->propertyTreeHash, &PropertyTreeHashOps, NULL,
                            sizeof(JSPropertyTreeEntry), JS_DHASH_MIN_SIZE)) {
         rt->propertyTreeHash.ops = NULL;
@@ -1765,9 +1697,7 @@ js_InitPropertyTree(JSRuntime *rt)
     return JS_TRUE;
 }
 
-void
-js_FinishPropertyTree(JSRuntime *rt)
-{
+void js_FinishPropertyTree(JSRuntime *rt) {
     if (rt->propertyTreeHash.ops) {
         JS_DHashTableFinish(&rt->propertyTreeHash);
         rt->propertyTreeHash.ops = NULL;

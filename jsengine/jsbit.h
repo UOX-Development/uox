@@ -47,15 +47,18 @@ JS_BEGIN_EXTERN_C
 /*
 ** A jsbitmap_t is a long integer that can be used for bitmaps
 */
-typedef JSUword     jsbitmap_t;     /* NSPR name, a la Unix system types */
-typedef jsbitmap_t  jsbitmap;       /* JS-style scalar typedef name */
+typedef JSUword jsbitmap_t;  /* NSPR name, a la Unix system types */
+typedef jsbitmap_t jsbitmap; /* JS-style scalar typedef name */
 
-#define JS_TEST_BIT(_map,_bit) \
-    ((_map)[(_bit)>>JS_BITS_PER_WORD_LOG2] & (1L << ((_bit) & (JS_BITS_PER_WORD-1))))
-#define JS_SET_BIT(_map,_bit) \
-    ((_map)[(_bit)>>JS_BITS_PER_WORD_LOG2] |= (1L << ((_bit) & (JS_BITS_PER_WORD-1))))
-#define JS_CLEAR_BIT(_map,_bit) \
-    ((_map)[(_bit)>>JS_BITS_PER_WORD_LOG2] &= ~(1L << ((_bit) & (JS_BITS_PER_WORD-1))))
+#define JS_TEST_BIT(_map, _bit)                                                \
+    ((_map)[(_bit) >> JS_BITS_PER_WORD_LOG2] &                                 \
+     (1L << ((_bit) & (JS_BITS_PER_WORD - 1))))
+#define JS_SET_BIT(_map, _bit)                                                 \
+    ((_map)[(_bit) >> JS_BITS_PER_WORD_LOG2] |=                                \
+     (1L << ((_bit) & (JS_BITS_PER_WORD - 1))))
+#define JS_CLEAR_BIT(_map, _bit)                                               \
+    ((_map)[(_bit) >> JS_BITS_PER_WORD_LOG2] &=                                \
+     ~(1L << ((_bit) & (JS_BITS_PER_WORD - 1))))
 
 /*
 ** Compute the log of the least power of 2 greater than or equal to n
@@ -73,7 +76,7 @@ extern JS_PUBLIC_API(JSIntn) JS_FloorLog2(JSUint32 i);
  * see bug 327129.
  */
 #if __GNUC__ >= 4 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 4)
-# define JS_HAS_GCC_BUILTIN_CLZ
+#define JS_HAS_GCC_BUILTIN_CLZ
 #endif
 
 /*
@@ -86,29 +89,29 @@ extern JS_PUBLIC_API(JSIntn) JS_FloorLog2(JSUint32 i);
  * The macro checks for "n <= 1" and not "n != 0" as __builtin_clz(0) is
  * undefined.
  */
-# define JS_CEILING_LOG2(_log2,_n)                                            \
-    JS_BEGIN_MACRO                                                            \
-        JS_STATIC_ASSERT(sizeof(unsigned int) == sizeof(JSUint32));           \
-        unsigned int j_ = (unsigned int)(_n);                                 \
-        (_log2) = (j_ <= 1 ? 0 : 32 - __builtin_clz(j_ - 1));                 \
+#define JS_CEILING_LOG2(_log2, _n)                                             \
+    JS_BEGIN_MACRO                                                             \
+    JS_STATIC_ASSERT(sizeof(unsigned int) == sizeof(JSUint32));                \
+    unsigned int j_ = (unsigned int)(_n);                                      \
+    (_log2) = (j_ <= 1 ? 0 : 32 - __builtin_clz(j_ - 1));                      \
     JS_END_MACRO
 #else
-# define JS_CEILING_LOG2(_log2,_n)                                            \
-    JS_BEGIN_MACRO                                                            \
-        JSUint32 j_ = (JSUint32)(_n);                                         \
-        (_log2) = 0;                                                          \
-        if ((j_) & ((j_)-1))                                                  \
-            (_log2) += 1;                                                     \
-        if ((j_) >> 16)                                                       \
-            (_log2) += 16, (j_) >>= 16;                                       \
-        if ((j_) >> 8)                                                        \
-            (_log2) += 8, (j_) >>= 8;                                         \
-        if ((j_) >> 4)                                                        \
-            (_log2) += 4, (j_) >>= 4;                                         \
-        if ((j_) >> 2)                                                        \
-            (_log2) += 2, (j_) >>= 2;                                         \
-        if ((j_) >> 1)                                                        \
-            (_log2) += 1;                                                     \
+#define JS_CEILING_LOG2(_log2, _n)                                             \
+    JS_BEGIN_MACRO                                                             \
+    JSUint32 j_ = (JSUint32)(_n);                                              \
+    (_log2) = 0;                                                               \
+    if ((j_) & ((j_)-1))                                                       \
+        (_log2) += 1;                                                          \
+    if ((j_) >> 16)                                                            \
+        (_log2) += 16, (j_) >>= 16;                                            \
+    if ((j_) >> 8)                                                             \
+        (_log2) += 8, (j_) >>= 8;                                              \
+    if ((j_) >> 4)                                                             \
+        (_log2) += 4, (j_) >>= 4;                                              \
+    if ((j_) >> 2)                                                             \
+        (_log2) += 2, (j_) >>= 2;                                              \
+    if ((j_) >> 1)                                                             \
+        (_log2) += 1;                                                          \
     JS_END_MACRO
 #endif
 
@@ -124,26 +127,26 @@ extern JS_PUBLIC_API(JSIntn) JS_FloorLog2(JSUint32 i);
  * Since __builtin_clz(0) is undefined, the macro set the loweset bit to 1
  * to ensure 0 result when _n == 0.
  */
-# define JS_FLOOR_LOG2(_log2,_n)                                              \
-    JS_BEGIN_MACRO                                                            \
-        JS_STATIC_ASSERT(sizeof(unsigned int) == sizeof(JSUint32));           \
-        (_log2) = 31 - __builtin_clz(((unsigned int)(_n)) | 1);               \
+#define JS_FLOOR_LOG2(_log2, _n)                                               \
+    JS_BEGIN_MACRO                                                             \
+    JS_STATIC_ASSERT(sizeof(unsigned int) == sizeof(JSUint32));                \
+    (_log2) = 31 - __builtin_clz(((unsigned int)(_n)) | 1);                    \
     JS_END_MACRO
 #else
-# define JS_FLOOR_LOG2(_log2,_n)                                              \
-    JS_BEGIN_MACRO                                                            \
-        JSUint32 j_ = (JSUint32)(_n);                                         \
-        (_log2) = 0;                                                          \
-        if ((j_) >> 16)                                                       \
-            (_log2) += 16, (j_) >>= 16;                                       \
-        if ((j_) >> 8)                                                        \
-            (_log2) += 8, (j_) >>= 8;                                         \
-        if ((j_) >> 4)                                                        \
-            (_log2) += 4, (j_) >>= 4;                                         \
-        if ((j_) >> 2)                                                        \
-            (_log2) += 2, (j_) >>= 2;                                         \
-        if ((j_) >> 1)                                                        \
-            (_log2) += 1;                                                     \
+#define JS_FLOOR_LOG2(_log2, _n)                                               \
+    JS_BEGIN_MACRO                                                             \
+    JSUint32 j_ = (JSUint32)(_n);                                              \
+    (_log2) = 0;                                                               \
+    if ((j_) >> 16)                                                            \
+        (_log2) += 16, (j_) >>= 16;                                            \
+    if ((j_) >> 8)                                                             \
+        (_log2) += 8, (j_) >>= 8;                                              \
+    if ((j_) >> 4)                                                             \
+        (_log2) += 4, (j_) >>= 4;                                              \
+    if ((j_) >> 2)                                                             \
+        (_log2) += 2, (j_) >>= 2;                                              \
+    if ((j_) >> 1)                                                             \
+        (_log2) += 1;                                                          \
     JS_END_MACRO
 #endif
 
@@ -153,7 +156,7 @@ extern JS_PUBLIC_API(JSIntn) JS_FloorLog2(JSUint32 i);
  * This is a version of JS_CeilingLog2 that operates on jsuword with
  * CPU-dependant size.
  */
-#define JS_CEILING_LOG2W(n) ((n) <= 1 ? 0 : 1 + JS_FLOOR_LOG2W((n) - 1))
+#define JS_CEILING_LOG2W(n) ((n) <= 1 ? 0 : 1 + JS_FLOOR_LOG2W((n)-1))
 
 /*
  * Internal function.
@@ -165,31 +168,29 @@ extern JS_PUBLIC_API(JSIntn) JS_FloorLog2(JSUint32 i);
 
 #ifdef JS_HAS_GCC_BUILTIN_CLZ
 
-# if JS_BYTES_PER_WORD == 4
+#if JS_BYTES_PER_WORD == 4
 JS_STATIC_ASSERT(sizeof(unsigned) == sizeof(JSUword));
-#  define js_FloorLog2wImpl(n)                                                \
+#define js_FloorLog2wImpl(n)                                                   \
     ((JSUword)(JS_BITS_PER_WORD - 1 - __builtin_clz(n)))
-# elif JS_BYTES_PER_WORD == 8
+#elif JS_BYTES_PER_WORD == 8
 JS_STATIC_ASSERT(sizeof(unsigned long long) == sizeof(JSUword));
-#  define js_FloorLog2wImpl(n)                                                \
+#define js_FloorLog2wImpl(n)                                                   \
     ((JSUword)(JS_BITS_PER_WORD - 1 - __builtin_clzll(n)))
-# else
-#  error "NOT SUPPORTED"
-# endif
+#else
+#error "NOT SUPPORTED"
+#endif
 
 #else
 
-# if JS_BYTES_PER_WORD == 4
-#  define js_FloorLog2wImpl(n) ((JSUword)JS_FloorLog2(n))
-# elif JS_BYTES_PER_WORD == 8
-extern JSUword
-js_FloorLog2wImpl(JSUword n);
-# else
-#  error "NOT SUPPORTED"
-# endif
-
+#if JS_BYTES_PER_WORD == 4
+#define js_FloorLog2wImpl(n) ((JSUword)JS_FloorLog2(n))
+#elif JS_BYTES_PER_WORD == 8
+extern JSUword js_FloorLog2wImpl(JSUword n);
+#else
+#error "NOT SUPPORTED"
 #endif
 
+#endif
 
 JS_END_EXTERN_C
 #endif /* jsbit_h___ */

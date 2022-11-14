@@ -36,15 +36,14 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "jsstddef.h"
 #include "jsbit.h"
+#include "jsstddef.h"
 #include "jsutil.h"
 
 /*
 ** Compute the log of the least power of 2 greater than or equal to n
 */
-JS_PUBLIC_API(JSIntn) JS_CeilingLog2(JSUint32 n)
-{
+JS_PUBLIC_API(JSIntn) JS_CeilingLog2(JSUint32 n) {
     JSIntn log2;
 
     JS_CEILING_LOG2(log2, n);
@@ -55,8 +54,7 @@ JS_PUBLIC_API(JSIntn) JS_CeilingLog2(JSUint32 n)
 ** Compute the log of the greatest power of 2 less than or equal to n.
 ** This really just finds the highest set bit in the word.
 */
-JS_PUBLIC_API(JSIntn) JS_FloorLog2(JSUint32 n)
-{
+JS_PUBLIC_API(JSIntn) JS_FloorLog2(JSUint32 n) {
     JSIntn log2;
 
     JS_FLOOR_LOG2(log2, n);
@@ -68,24 +66,37 @@ JS_PUBLIC_API(JSIntn) JS_FloorLog2(JSUint32 n)
  */
 #if !defined(JS_HAS_GCC_BUILTIN_CLZ) && JS_BYTES_PER_WORD == 8
 
-JSUword
-js_FloorLog2wImpl(JSUword n)
-{
+JSUword js_FloorLog2wImpl(JSUword n) {
     JSUword log2, m;
 
     JS_ASSERT(n != 0);
 
     log2 = 0;
     m = n >> 32;
-    if (m != 0) { n = m; log2 = 32; }
+    if (m != 0) {
+        n = m;
+        log2 = 32;
+    }
     m = n >> 16;
-    if (m != 0) { n = m; log2 |= 16; }
+    if (m != 0) {
+        n = m;
+        log2 |= 16;
+    }
     m = n >> 8;
-    if (m != 0) { n = m; log2 |= 8; }
+    if (m != 0) {
+        n = m;
+        log2 |= 8;
+    }
     m = n >> 4;
-    if (m != 0) { n = m; log2 |= 4; }
+    if (m != 0) {
+        n = m;
+        log2 |= 4;
+    }
     m = n >> 2;
-    if (m != 0) { n = m; log2 |= 2; }
+    if (m != 0) {
+        n = m;
+        log2 |= 2;
+    }
     log2 |= (n >> 1);
 
     return log2;
