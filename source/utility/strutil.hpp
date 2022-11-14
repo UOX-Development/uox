@@ -34,7 +34,7 @@ namespace strutil {
 	//=========================================================
 	
 	// Trim all whitespace from the left of the string
-	auto ltrim(const std::string &value) ->std::string {
+	inline auto ltrim(const std::string &value) ->std::string {
 		if (!value.empty()){
 			auto loc = value.find_first_not_of(" \t\v\f\n\r") ;
 			if (loc == std::string::npos){
@@ -46,7 +46,7 @@ namespace strutil {
 	}
 	//=========================================================
 	// Trim all whitespace from the right of the string
-	auto rtrim(const std::string &value) ->std::string {
+    inline auto rtrim(const std::string &value) ->std::string {
 		if (!value.empty()){
 			auto loc = value.find_last_not_of(" \t\v\f\n\r");
 			if (loc == std::string::npos){
@@ -58,7 +58,7 @@ namespace strutil {
 	}
 	//=========================================================
 	// Trim all whitespace from both sides of the string
-	auto trim(const std::string &value) ->std::string {
+    inline auto trim(const std::string &value) ->std::string {
 		return rtrim(ltrim(value));
 	}
 
@@ -66,16 +66,16 @@ namespace strutil {
 	// Trim all whitespace from both sides of the string.
 	// In addition, replace all runs of whitespace inside the string
 	// with a single space character
-	auto simplify(const std::string &value) ->std::string {
+    inline auto simplify(const std::string &value) ->std::string {
 		// first get the leading/trailing whitespace off
 		auto working = trim(value) ;
 		if (!working.empty()){
-			auto startloc = working.find_first_of(_whitespace);
+			auto startloc = working.find_first_of(" \t\v\f\n\r");
 			while ((startloc != std::string::npos) && (startloc < working.size())){
-				auto endloc = working.find_first_not_of(_whitespace,startloc);
+				auto endloc = working.find_first_not_of(" \t\v\f\n\r",startloc);
 				auto amount = endloc - startloc ;
-				working.replace(startloc,amount," "s);
-				startloc = working.find_first_of(_whitespace,startloc+1) ;
+				working.replace(startloc,amount,std::string(" "));
+				startloc = working.find_first_of(" \t\v\f\n\r",startloc+1) ;
 			}
 		}
 		return working ;
@@ -85,7 +85,7 @@ namespace strutil {
 	// Case utilities
 	//=========================================================
 	
-	auto upper(const std::string& value) ->std::string {
+    inline auto upper(const std::string& value) ->std::string {
 		std::string rvalue ;
 		std::transform(value.begin(), value.end(), std::back_inserter(rvalue),
 				   [](unsigned char c){ return std::toupper(c); } // correct
@@ -94,7 +94,7 @@ namespace strutil {
 		
 	}
 	//========================================================================
-	auto lower(const std::string& value) ->std::string{
+    inline auto lower(const std::string& value) ->std::string{
 		std::string rvalue ;
 		std::transform(value.begin(), value.end(), std::back_inserter(rvalue),
 				   [](unsigned char c){ return std::tolower(c); } // correct
@@ -109,7 +109,7 @@ namespace strutil {
 	//=========================================================
 	
 	//=========================================================
-	auto strip(const std::string &value , const std::string &sep="//",bool pack = true ) ->std::string{
+    inline auto strip(const std::string &value , const std::string &sep="//",bool pack = true ) ->std::string{
 		auto rvalue = value ;
 		auto loc = rvalue.find(sep) ;
 		if (loc != std::string::npos){
@@ -122,9 +122,9 @@ namespace strutil {
 	}
 
 	//=========================================================
-	auto split(const std::string &value , const std::string &sep) ->std::pair<std::string,std::string> {
+    inline auto split(const std::string &value , const std::string &sep) ->std::pair<std::string,std::string> {
 		auto first = value ;
-		auto second = ""s ;
+		auto second = std::string() ;
 		auto loc = value.find(sep) ;
 		if (loc != std::string::npos){
 			first = trim(value.substr(0,loc));
@@ -137,7 +137,7 @@ namespace strutil {
 	}
 
 	//=========================================================
-	auto parse(const std::string& value, const std::string& sep ) ->std::vector<std::string> {
+    inline auto parse(const std::string& value, const std::string& sep ) ->std::vector<std::string> {
 		std::vector<std::string> rvalue ;
 		auto current = std::string::size_type(0) ;
 		auto loc = value.find(sep,current) ;
@@ -158,7 +158,7 @@ namespace strutil {
 	//=========================================================
 	
 	//=========================================================
-	auto sysTimeToString(const std::chrono::system_clock::time_point &t) ->std::string {
+    inline auto sysTimeToString(const std::chrono::system_clock::time_point &t) ->std::string {
 		auto time = std::chrono::system_clock::to_time_t(t);
 #if defined( _MSC_VER )
 #pragma warning(push)
@@ -175,7 +175,7 @@ namespace strutil {
 	
 	//=========================================================
 	// Format expected by the default format is: Thu Dec 30 14:13:28 2021
-	auto stringToSysTime(const std::string &str, const std::string &format = "%a %b %d %H:%M:%S %Y") ->std::chrono::system_clock::time_point{
+    inline auto stringToSysTime(const std::string &str, const std::string &format = "%a %b %d %H:%M:%S %Y") ->std::chrono::system_clock::time_point{
 		std::stringstream timbuf(str);
 		tm converted;
 		
@@ -236,7 +236,7 @@ namespace strutil {
 	//==========================================================
 	// Convert a bool to a string
 	// the true_value/false_value are returned based on the bool
-	auto ntos(bool value,const std::string &true_value = "true",const std::string &false_value = "false")->std::string{
+    inline auto ntos(bool value,const std::string &true_value = "true",const std::string &false_value = "false")->std::string{
 		return (value?true_value:false_value) ;
 	}
 	
@@ -362,11 +362,11 @@ namespace strutil {
 	//===========================================================
 	// Formatted dump of a byte buffer
 	//===========================================================
-	
+
 	//===========================================================
 	// Dumps a byte buffer, formatted to a provided stream.
 	// The entries_line indicate how many bytes to display per line.
-	auto dump(std::ostream &output,const std::uint8_t *buffer, std::size_t length,radix_t radix=radix_t::hex,int entries_line = 8)->void{
+ 	inline auto dump(std::ostream &output,const std::uint8_t *buffer, std::size_t length,radix_t radix=radix_t::hex,int entries_line = 8)->void{
 		// number of characters for entry
 		auto entry_size = 3 ;  // decimal and octal
 		switch (static_cast<int>(radix)) {
@@ -422,5 +422,6 @@ namespace strutil {
 		}
 
 	}
+ 
 }
 #endif /* strutil_hpp */

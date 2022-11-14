@@ -1,0 +1,48 @@
+
+//===============================================================================================
+// Enviroment Variables
+//===============================================================================================
+UOXCFG			defines the full file path to the uox.cfg file (including name) ;
+UODATA			defines location to uo data directory
+
+//===============================================================================================
+// Defines
+//===============================================================================================
+
+The system uses defines to aid in some defaults, and OS specifics
+
+_WIN32   		used to determine if a windows os build
+
+_LINE_BUFFER  	used to determine the max characters of a line in a configuration/data file
+				Defaults to 2048 if not defined
+
+_UODATA_		used to determine the enviroment varaible that will be looked at for the
+				the default uo data location.  This defaults to : UODATA.  If the enviorment
+    			variable is not set, and not setting is provided in the uox.cfg, then the directory
+       			defaults to: (windows) "C:\\Program Files (x86)\\Electronc Arts\\Ultima Online Classic"
+          		and (unix) "~/uodata". 
+
+//===============================================================================================
+// Defaults
+//===============================================================================================
+
+public_ip				localhost
+port					2593
+server_directory		server_data
+shard_directory			shard_data
+account file			account.act
+setup file 				setup.cfg
+firewall file			firewall.cfg
+
+//===============================================================================================
+// Command line arguments
+//===============================================================================================
+Note: [] indicats optional
+The program is started with:
+	uox [flags] configuration_file
+
+where flags is one of:
+	--no-daemon   	(Default) Starts the program interactively
+	--daemon		Starts the program as a daemon
+
+configuration_file	The configuration file (Defaults to uox.cfg) that has the initial settings for the server.

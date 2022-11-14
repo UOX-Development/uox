@@ -7,9 +7,13 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		640752C82919842D009F004D /* libjsengine.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 640752C729198429009F004D /* libjsengine.a */; };
 		640752CA29198457009F004D /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 640752C92919844B009F004D /* libz.tbd */; };
 		640752CD29198490009F004D /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 640752CB29198490009F004D /* main.cpp */; };
+		640752D8291A7F4D009F004D /* argument.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 640752D6291A7F4D009F004D /* argument.cpp */; };
+		64A753AF291AA4E200F9A14E /* configuration.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 64A753AD291AA4E200F9A14E /* configuration.cpp */; };
+		64A753D0291D2F7400F9A14E /* serialgen.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 64A753CE291D2F7400F9A14E /* serialgen.cpp */; };
+		64A753D3291D79F000F9A14E /* objectfactory.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 64A753D1291D79F000F9A14E /* objectfactory.cpp */; };
+		64A753DA291F28FB00F9A14E /* tileinfo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 64A753D8291F28FB00F9A14E /* tileinfo.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -42,6 +46,20 @@
 		640752C92919844B009F004D /* libz.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libz.tbd; path = usr/lib/libz.tbd; sourceTree = SDKROOT; };
 		640752CB29198490009F004D /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		640752CC29198490009F004D /* main.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = main.hpp; sourceTree = "<group>"; };
+		640752D6291A7F4D009F004D /* argument.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = argument.cpp; sourceTree = "<group>"; };
+		640752D7291A7F4D009F004D /* argument.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = argument.hpp; sourceTree = "<group>"; };
+		64A753AD291AA4E200F9A14E /* configuration.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = configuration.cpp; sourceTree = "<group>"; };
+		64A753AE291AA4E200F9A14E /* configuration.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = configuration.hpp; sourceTree = "<group>"; };
+		64A753CE291D2F7400F9A14E /* serialgen.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = serialgen.cpp; sourceTree = "<group>"; };
+		64A753CF291D2F7400F9A14E /* serialgen.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = serialgen.hpp; sourceTree = "<group>"; };
+		64A753D1291D79F000F9A14E /* objectfactory.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = objectfactory.cpp; sourceTree = "<group>"; };
+		64A753D2291D79F000F9A14E /* objectfactory.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = objectfactory.hpp; sourceTree = "<group>"; };
+		64A753D5291E9A8000F9A14E /* defines.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = defines.h; sourceTree = "<group>"; };
+		64A753D7291EE3DB00F9A14E /* Defines&Defaults.txt */ = {isa = PBXFileReference; lastKnownFileType = text; name = "Defines&Defaults.txt"; path = "../Defines&Defaults.txt"; sourceTree = "<group>"; };
+		64A753D8291F28FB00F9A14E /* tileinfo.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = tileinfo.cpp; sourceTree = "<group>"; };
+		64A753D9291F28FB00F9A14E /* tileinfo.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = tileinfo.hpp; sourceTree = "<group>"; };
+		64A753DE291FF61F00F9A14E /* uox.cfg */ = {isa = PBXFileReference; lastKnownFileType = text; name = uox.cfg; path = ../uox.cfg; sourceTree = "<group>"; };
+		64A753DF291FF6D300F9A14E /* tileinfo.cfg */ = {isa = PBXFileReference; lastKnownFileType = text; path = tileinfo.cfg; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -49,7 +67,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				640752C82919842D009F004D /* libjsengine.a in Frameworks */,
 				640752CA29198457009F004D /* libz.tbd in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -60,6 +77,9 @@
 		640752AA2919837A009F004D = {
 			isa = PBXGroup;
 			children = (
+				64A753D7291EE3DB00F9A14E /* Defines&Defaults.txt */,
+				64A753DE291FF61F00F9A14E /* uox.cfg */,
+				64A753DD291FF61200F9A14E /* server_data */,
 				640752BD291983C0009F004D /* source */,
 				640752B42919837A009F004D /* Products */,
 				640752C129198429009F004D /* Frameworks */,
@@ -77,9 +97,12 @@
 		640752BD291983C0009F004D /* source */ = {
 			isa = PBXGroup;
 			children = (
+				64A753D6291EDFCA00F9A14E /* uodata */,
+				64A753CD291D2F5900F9A14E /* definition */,
+				64A753CC291D2F4200F9A14E /* network */,
+				64A753CB291D2F0500F9A14E /* gameobject */,
+				640752D4291A7F19009F004D /* main */,
 				640752BE291983C0009F004D /* utility */,
-				640752CB29198490009F004D /* main.cpp */,
-				640752CC29198490009F004D /* main.hpp */,
 			);
 			name = source;
 			path = ../source;
@@ -109,6 +132,63 @@
 				640752C729198429009F004D /* libjsengine.a */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		640752D4291A7F19009F004D /* main */ = {
+			isa = PBXGroup;
+			children = (
+				640752CB29198490009F004D /* main.cpp */,
+				640752CC29198490009F004D /* main.hpp */,
+				640752D6291A7F4D009F004D /* argument.cpp */,
+				640752D7291A7F4D009F004D /* argument.hpp */,
+				64A753AD291AA4E200F9A14E /* configuration.cpp */,
+				64A753AE291AA4E200F9A14E /* configuration.hpp */,
+				64A753D5291E9A8000F9A14E /* defines.h */,
+			);
+			path = main;
+			sourceTree = "<group>";
+		};
+		64A753CB291D2F0500F9A14E /* gameobject */ = {
+			isa = PBXGroup;
+			children = (
+				64A753CE291D2F7400F9A14E /* serialgen.cpp */,
+				64A753CF291D2F7400F9A14E /* serialgen.hpp */,
+				64A753D1291D79F000F9A14E /* objectfactory.cpp */,
+				64A753D2291D79F000F9A14E /* objectfactory.hpp */,
+			);
+			path = gameobject;
+			sourceTree = "<group>";
+		};
+		64A753CC291D2F4200F9A14E /* network */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = network;
+			sourceTree = "<group>";
+		};
+		64A753CD291D2F5900F9A14E /* definition */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = definition;
+			sourceTree = "<group>";
+		};
+		64A753D6291EDFCA00F9A14E /* uodata */ = {
+			isa = PBXGroup;
+			children = (
+				64A753D8291F28FB00F9A14E /* tileinfo.cpp */,
+				64A753D9291F28FB00F9A14E /* tileinfo.hpp */,
+			);
+			path = uodata;
+			sourceTree = "<group>";
+		};
+		64A753DD291FF61200F9A14E /* server_data */ = {
+			isa = PBXGroup;
+			children = (
+				64A753DF291FF6D300F9A14E /* tileinfo.cfg */,
+			);
+			name = server_data;
+			path = ../server_data;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -185,7 +265,12 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				64A753D0291D2F7400F9A14E /* serialgen.cpp in Sources */,
+				640752D8291A7F4D009F004D /* argument.cpp in Sources */,
+				64A753D3291D79F000F9A14E /* objectfactory.cpp in Sources */,
 				640752CD29198490009F004D /* main.cpp in Sources */,
+				64A753AF291AA4E200F9A14E /* configuration.cpp in Sources */,
+				64A753DA291F28FB00F9A14E /* tileinfo.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
